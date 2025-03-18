@@ -1,10 +1,11 @@
-const CACHE_NAME = 'snake-game-v1';
+const CACHE_NAME = 'snake-game-v2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css',
   '/game.js',
   '/api.js',
+  '/country.js',
   '/manifest.json',
   '/icons/android/android-launchericon-48-48.png',
   '/icons/android/android-launchericon-72-72.png',
@@ -41,17 +42,36 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Estrategia de caché: Cache first, then network
+// Estrategia de caché mejorada: Stale-while-revalidate
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(event.request).then(cachedResponse => {
+        const fetchPromise = fetch(event.request).then(networkResponse => {
+          // Actualizar la caché solo para solicitudes exitosas
+          if (networkResponse && networkResponse.status === 200) {
+            cache.put(event.request, networkResponse.clone());
+          }
+          return networkResponse;
+        }).catch(() => {
+          // Si la red falla, intentamos servir desde caché
+          return cachedResponse;
+        });
+
+        // Devolver la respuesta en caché mientras se actualiza en segundo plano
+        return cachedResponse || fetchPromise;
+      });
+    })
   );
+});
+
+// Precarga de recursos cuando hay conexión
+self.addEventListener('sync', event => {
+  if (event.tag === 'precache-resources') {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then(cache => {
+        return cache.addAll(urlsToCache);
+      })
+    );
+  }
 });

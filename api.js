@@ -1,5 +1,8 @@
 // API para manejar puntajes mundiales
 
+// Importar funciones de detección de país
+import { getUserCountry } from './country.js';
+
 // URL base para la API (vacía hasta que se implemente correctamente)
 // Cuando se implemente la API real, aquí se colocará la URL correcta
 const API_BASE_URL = '';
@@ -11,7 +14,9 @@ let isOfflineMode = true;
 // Función para verificar la conectividad
 async function checkConnectivity() {
     // Siempre retornamos false (modo offline) hasta que se implemente la API
-    console.log('Modo offline activado hasta implementación de API');
+    const userLang = navigator.language.split('-')[0];
+    const offlineMsg = userLang === 'en' ? 'Offline Mode activated until API implementation' : 'Modo offline activado hasta implementación de API';
+    console.log(offlineMsg);
     isOfflineMode = true;
     return false;
 }
@@ -20,7 +25,9 @@ async function checkConnectivity() {
 async function getWorldScores() {
     try {
         // Siempre en modo offline hasta implementación de API
-        console.log('Modo offline: usando datos locales para puntajes mundiales');
+        const userLang = navigator.language.split('-')[0];
+        const offlineMsg = userLang === 'en' ? 'Offline Mode: using local data for world scores' : 'Modo offline: usando datos locales para puntajes mundiales';
+        console.log(offlineMsg);
         
         // Verificar si hay datos de demostración en localStorage
         const demoWorldScores = localStorage.getItem('demoWorldScores');
@@ -60,10 +67,15 @@ async function getWorldScores() {
 async function submitWorldScore(scoreData) {
     try {
         // Siempre en modo offline hasta implementación de API
-        console.log('Modo offline: guardando puntaje solo localmente');
+        const userLang = navigator.language.split('-')[0];
+        const offlineMsg = userLang === 'en' ? 'Offline Mode: saving score locally only' : 'Modo offline: guardando puntaje solo localmente';
+        console.log(offlineMsg);
         
         // Obtener puntajes actuales
         const currentScores = await getWorldScores();
+        
+        // Obtener el código de país del usuario
+        const countryCode = await getUserCountry();
         
         // Verificar si el jugador ya tiene un puntaje
         const existingIndex = currentScores.findIndex(s => s.initials === scoreData.initials);
@@ -73,6 +85,7 @@ async function submitWorldScore(scoreData) {
             if (scoreData.score > currentScores[existingIndex].score) {
                 currentScores[existingIndex] = {
                     ...scoreData,
+                    country: countryCode,
                     date: new Date().toISOString().split('T')[0] // Formato YYYY-MM-DD
                 };
             }
@@ -80,6 +93,7 @@ async function submitWorldScore(scoreData) {
             // Agregar nuevo puntaje
             currentScores.push({
                 ...scoreData,
+                country: countryCode,
                 date: new Date().toISOString().split('T')[0] // Formato YYYY-MM-DD
             });
         }
@@ -103,7 +117,9 @@ async function submitWorldScore(scoreData) {
 
 // Función para actualizar periódicamente los puntajes mundiales
 function startWorldScoresSync(updateCallback, intervalMs = 5000) { // Intervalo reducido para actualización más rápida
-    console.log('Iniciando sincronización de puntajes en modo offline');
+    const userLang = navigator.language.split('-')[0];
+    const syncMsg = userLang === 'en' ? 'Starting score synchronization in offline mode' : 'Iniciando sincronización de puntajes en modo offline';
+    console.log(syncMsg);
     
     // Realizar actualización inicial
     getWorldScores().then(updateCallback).catch(error => {

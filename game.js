@@ -24,13 +24,16 @@ const translations = {
         'points': 'Puntos',
         'gameOver': '¡Juego terminado!',
         'enterInitials': 'Ingresa tus iniciales (3 caracteres):',
-        'touch': 'Controles táctiles',
-        'installApp': 'Instala el Juego',
+        'touch': 'Controles',
+        'installApp': 'Instalar Juego',
         'local': 'Local',
         'world': 'Mundial',
         'country': 'País',
-        'syncingScores': 'Sincronizando puntajes...',
-        'lastUpdate': 'Última actualización:'
+        'syncingScores': 'Sincronizando puntuaciones...',
+        'lastUpdate': 'Última actualización:',
+        'offlineMode': 'Modo Offline',
+        'usingLocalData': 'Usando datos locales',
+        'tryAgain': 'Intentar de nuevo'
     },
     'en': {
         'start': 'Start Game',
@@ -41,13 +44,16 @@ const translations = {
         'points': 'Points',
         'gameOver': 'Game Over!',
         'enterInitials': 'Enter your initials (3 characters):',
-        'touch': 'Touch Controls',
+        'touch': 'Controls',
         'installApp': 'Install Game',
         'local': 'Local',
         'world': 'World',
         'country': 'Country',
         'syncingScores': 'Syncing scores...',
-        'lastUpdate': 'Last update:'
+        'lastUpdate': 'Last update:',
+        'offlineMode': 'Offline Mode',
+        'usingLocalData': 'Using local data',
+        'tryAgain': 'Try Again'
     }
 };
 
@@ -308,6 +314,13 @@ function gameOver() {
     
     menu.style.display = 'block';
     startButton.textContent = translations[userLanguage]['playAgain'];
+    
+    // Eliminar el botón 'tryAgainButton' si existe para evitar duplicados
+    const existingTryAgainButton = document.getElementById('tryAgainButton');
+    if (existingTryAgainButton) {
+        existingTryAgainButton.remove();
+    }
+    
     updateHighScoreDisplay();
 }
 
@@ -325,63 +338,56 @@ function updateHighScoreDisplay() {
     }
 }
 
-function updateWorldScoresDisplay() {
-    const worldScoresList = document.getElementById('worldScoresList');
-    if (worldScoresList) {
-        // Verificar si estamos en modo offline
-        if (isOfflineMode) {
-            // Mostrar mensaje de modo offline
-            const offlineMessage = document.createElement('div');
-            offlineMessage.classList.add('offline-mode');
-            offlineMessage.textContent = '🔄 Modo Offline - Usando datos locales';
-            offlineMessage.style.color = '#FF9800';
-            offlineMessage.style.fontWeight = 'bold';
-            offlineMessage.style.padding = '5px';
-            offlineMessage.style.textAlign = 'center';
-            
-            // Limpiar contenido anterior
-            worldScoresList.innerHTML = '';
-            const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.setAttribute('colspan', '4');
-            cell.appendChild(offlineMessage);
-            row.appendChild(cell);
-            worldScoresList.appendChild(row);
-            
-            // Mostrar datos locales
-            if (worldScores.length > 0) {
-                worldScores.forEach((score, index) => {
-                    const scoreRow = document.createElement('tr');
-                    scoreRow.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${score.initials}</td>
-                        <td>${score.score}</td>
-                        <td>${score.country || 'XX'}</td>
-                    `;
-                    worldScoresList.appendChild(scoreRow);
-                });
-            }
-        } else if (worldScores.length === 0) {
-            worldScoresList.innerHTML = `<tr><td colspan="4">${translations[userLanguage]['syncingScores']}</td></tr>`;
-        } else {
-            worldScoresList.innerHTML = worldScores
-                .map((score, index) => `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${score.initials}</td>
-                        <td>${score.score}</td>
-                        <td>${score.country || 'XX'}</td>
-                    </tr>
-                `).join('');
-            
-            // Mostrar la última actualización
-            if (lastWorldScoreUpdate) {
-                const updateTimeElement = document.createElement('div');
-                updateTimeElement.classList.add('last-update');
-                updateTimeElement.textContent = `${translations[userLanguage]['lastUpdate']} ${lastWorldScoreUpdate.toLocaleTimeString()}`;
-                worldScoresList.parentNode.appendChild(updateTimeElement);
-            }
+function updateWorldScoreDisplay() {
+    if (!worldScoresList) return;
+    
+    worldScoresList.innerHTML = '';
+    
+    // Actualizar encabezados de la tabla según el idioma
+    const worldScoresTable = document.querySelector('#worldScoresTab table');
+    if (worldScoresTable) {
+        const headerRow = worldScoresTable.querySelector('thead tr');
+        if (headerRow) {
+            headerRow.innerHTML = `
+                <th>#</th>
+                <th class="lang-player">${translations[userLanguage]['player']}</th>
+                <th class="lang-points">${translations[userLanguage]['points']}</th>
+                <th class="lang-country">${translations[userLanguage]['country']}</th>
+            `;
         }
+    }
+    
+    // Verificar si estamos en modo offline
+    if (isOfflineMode) {
+        // Mostrar mensaje de modo offline según el idioma
+        const offlineMessage = document.createElement('tr');
+        offlineMessage.innerHTML = `<td colspan="4" class="offline-mode">🔄 ${translations[userLanguage]['offlineMode']} - ${translations[userLanguage]['usingLocalData']}</td>`;
+        worldScoresList.appendChild(offlineMessage);
+    }
+    
+    if (worldScores.length === 0) {
+        const loadingRow = document.createElement('tr');
+        loadingRow.innerHTML = `<td colspan="4" class="loading-text">${translations[userLanguage]['syncingScores']}</td>`;
+        worldScoresList.appendChild(loadingRow);
+        return;
+    }
+    
+    worldScores.forEach((score, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${score.initials}</td>
+            <td>${score.score}</td>
+            <td>${score.country || '??'}</td>
+        `;
+        worldScoresList.appendChild(row);
+    });
+    
+    // Mostrar última actualización
+    if (lastWorldScoreUpdate) {
+        const updateInfoRow = document.createElement('tr');
+        updateInfoRow.innerHTML = `<td colspan="4" class="update-info">${translations[userLanguage]['lastUpdate']} ${lastWorldScoreUpdate.toLocaleTimeString()}</td>`;
+        worldScoresList.appendChild(updateInfoRow);
     }
 }
 
@@ -577,8 +583,10 @@ function initializeUI() {
         });
     }
     
-    // Iniciar sincronización de puntajes mundiales
-    initWorldScoresSync();
+    // Iniciar sincronización de puntajes mundiales (con retraso para mejorar carga inicial)
+    setTimeout(() => {
+        initWorldScoresSync();
+    }, 1000);
     
     // Configurar el botón de instalación
     installButton.addEventListener('click', async () => {
