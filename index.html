@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego Snake</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div id="menu" class="menu">
+                <h1>Snake Game</h1>
+                <button id="startButton">Iniciar Juego</button>
+                <p>Récord: <span id="highScore">0</span></p>
+                <p class="instructions">Presiona ENTER o ESPACIO para comenzar</p>
+            </div>
+            <canvas id="gameCanvas"></canvas>
+            <div class="score">Puntuación: <span id="scoreText">0</span></div>
+            <div class="mobile-controls">
+                <button id="upButton">↑</button>
+                <div class="horizontal-controls">
+                    <button id="leftButton">←</button>
+                    <button id="rightButton">→</button>
+                </div>
+                <button id="downButton">↓</button>
+            </div>
+        </div>
+        
+        <div class="top-scores">
+            <h2>TOP</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Jugador</th>
+                        <th>Puntos</th>
+                    </tr>
+                </thead>
+                <tbody id="highScoresList">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
