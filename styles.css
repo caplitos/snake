@@ -36,10 +36,15 @@ canvas {
     image-rendering: crisp-edges;
 }
 
-.score {
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.score, .level {
     color: #fff;
     font-size: 24px;
-    margin-top: 20px;
 }
 
 .menu {

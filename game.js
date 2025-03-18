@@ -33,7 +33,8 @@ const translations = {
         'lastUpdate': 'Última actualización:',
         'offlineMode': 'Modo Offline',
         'usingLocalData': 'Usando datos locales',
-        'tryAgain': 'Intentar de nuevo'
+        'tryAgain': 'Intentar de nuevo',
+        'level': 'Nivel'
     },
     'en': {
         'start': 'Start Game',
@@ -53,7 +54,8 @@ const translations = {
         'lastUpdate': 'Last update:',
         'offlineMode': 'Offline Mode',
         'usingLocalData': 'Using local data',
-        'tryAgain': 'Try Again'
+        'tryAgain': 'Try Again',
+        'level': 'Level'
     }
 };
 
@@ -82,6 +84,10 @@ let highScore = localStorage.getItem('snakeHighScore') || 0;
 let playerInitials = localStorage.getItem(LAST_PLAYER_KEY) || 'XXX';
 let highScores = JSON.parse(localStorage.getItem(HIGH_SCORES_KEY) || '[]');
 
+// Variables para niveles de dificultad
+let level = 1;
+let gameSpeed = 150; // Velocidad inicial más lenta para los primeros niveles
+
 // Elementos adicionales - Aseguramos que se inicialicen después de DOMContentLoaded
 let toggleScoresBtn;
 let topScoresDiv;
@@ -106,7 +112,10 @@ function initGame() {
     snake = [{ x: 200, y: 200 }];
     direction = 'right';
     score = 0;
+    level = 1;
+    gameSpeed = 150; // Velocidad inicial más lenta
     scoreText.textContent = score;
+    document.getElementById('levelText').textContent = level;
     createFood();
 }
 
@@ -164,6 +173,19 @@ function moveSnake() {
             highScoreText.textContent = highScore;
         }
         createFood();
+        
+        // Aumentar nivel y velocidad cada 50 puntos
+        const newLevel = Math.floor(score / 50) + 1;
+        if (newLevel > level) {
+            level = newLevel;
+            // Aumentar velocidad gradualmente (reducir el intervalo)
+            gameSpeed = Math.max(150 - (level - 1) * 10, 70);
+            // Actualizar el intervalo del juego
+            clearInterval(gameLoop);
+            gameLoop = setInterval(update, gameSpeed);
+            // Actualizar el texto del nivel
+            document.getElementById('levelText').textContent = level;
+        }
     } else {
         snake.pop();
     }
@@ -426,7 +448,7 @@ function togglePause() {
         menu.style.display = 'block';
     } else {
         menu.style.display = 'none';
-        gameLoop = setInterval(update, 100);
+        gameLoop = setInterval(update, gameSpeed);
     }
 }
 
@@ -434,7 +456,7 @@ function startGame() {
     initGame();
     isPaused = false;
     menu.style.display = 'none';
-    gameLoop = setInterval(update, 100);
+    gameLoop = setInterval(update, gameSpeed);
 }
 
 // Inicialización de la interfaz según el dispositivo
