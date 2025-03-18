@@ -8,6 +8,10 @@ const highScoreText = document.getElementById('highScore');
 // Constantes para almacenamiento local
 const HIGH_SCORES_KEY = 'snakeHighScores';
 const LAST_PLAYER_KEY = 'lastPlayer';
+const WORLD_SCORES_KEY = 'worldScores';
+
+// Importar funciones de API
+import { getWorldScores, submitWorldScore, startWorldScoresSync, checkConnectivity, isOfflineMode } from './api.js';
 
 // Configuración de idiomas
 const translations = {
@@ -21,7 +25,12 @@ const translations = {
         'gameOver': '¡Juego terminado!',
         'enterInitials': 'Ingresa tus iniciales (3 caracteres):',
         'touch': 'Controles táctiles',
-        'installApp': 'Instala el Juego'
+        'installApp': 'Instala el Juego',
+        'local': 'Local',
+        'world': 'Mundial',
+        'country': 'País',
+        'syncingScores': 'Sincronizando puntajes...',
+        'lastUpdate': 'Última actualización:'
     },
     'en': {
         'start': 'Start Game',
@@ -33,7 +42,12 @@ const translations = {
         'gameOver': 'Game Over!',
         'enterInitials': 'Enter your initials (3 characters):',
         'touch': 'Touch Controls',
-        'installApp': 'Install Game'
+        'installApp': 'Install Game',
+        'local': 'Local',
+        'world': 'World',
+        'country': 'Country',
+        'syncingScores': 'Syncing scores...',
+        'lastUpdate': 'Last update:'
     }
 };
 
@@ -68,6 +82,19 @@ let topScoresDiv;
 let toggleControlsBtn;
 let mobileControls;
 let installButton;
+let localTabBtn;
+let worldTabBtn;
+let localScoresTab;
+let worldScoresTab;
+let worldScoresList;
+let desktopTouchControls;
+let leftTouchControl;
+let rightTouchControl;
+
+// Variables para sincronización de puntajes mundiales
+let worldScores = [];
+let stopWorldScoresSync;
+let lastWorldScoreUpdate = null;
 
 function initGame() {
     snake = [{ x: 200, y: 200 }];
@@ -199,10 +226,20 @@ function toggleScores() {
 
 // Función para mostrar/ocultar controles táctiles
 function toggleControls() {
-    if (mobileControls.style.display === 'block') {
-        mobileControls.style.display = 'none';
+    if (!isTouchDevice) {
+        // En dispositivos no táctiles, mostrar/ocultar los controles táctiles de escritorio
+        if (desktopTouchControls.style.display === 'block') {
+            desktopTouchControls.style.display = 'none';
+        } else {
+            desktopTouchControls.style.display = 'block';
+        }
     } else {
-        mobileControls.style.display = 'block';
+        // En dispositivos táctiles, mostrar/ocultar los controles móviles
+        if (mobileControls.style.display === 'block') {
+            mobileControls.style.display = 'none';
+        } else {
+            mobileControls.style.display = 'block';
+        }
     }
 }
 
@@ -228,10 +265,30 @@ function saveHighScore() {
     }
     
     highScores.sort((a, b) => b.score - a.score);
-    highScores = highScores.slice(0, 3); // Mantener solo los 3 mejores
+    highScores = highScores.slice(0, 10); // Mantener solo los 10 mejores
     
     localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(highScores));
     localStorage.setItem(LAST_PLAYER_KEY, playerInitials);
+    
+    // Enviar puntaje al servidor mundial (simulado)
+    const worldScoreData = {
+        initials: playerInitials,
+        score: score,
+        country: navigator.language.split('-')[1] || 'XX' // Usar código de país del navegador o XX si no está disponible
+    };
+    
+    submitWorldScore(worldScoreData).then(result => {
+        if (result.success) {
+            console.log('Puntaje mundial enviado correctamente');
+            // Actualizar la lista de puntajes mundiales
+            getWorldScores().then(scores => {
+                worldScores = scores;
+                updateWorldScoresDisplay();
+            });
+        } else {
+            console.error('Error al enviar puntaje mundial:', result.message);
+        }
+    });
 }
 
 function gameOver() {
@@ -265,6 +322,66 @@ function updateHighScoreDisplay() {
                     <td>${score.score}</td>
                 </tr>
             `).join('');
+    }
+}
+
+function updateWorldScoresDisplay() {
+    const worldScoresList = document.getElementById('worldScoresList');
+    if (worldScoresList) {
+        // Verificar si estamos en modo offline
+        if (isOfflineMode) {
+            // Mostrar mensaje de modo offline
+            const offlineMessage = document.createElement('div');
+            offlineMessage.classList.add('offline-mode');
+            offlineMessage.textContent = '🔄 Modo Offline - Usando datos locales';
+            offlineMessage.style.color = '#FF9800';
+            offlineMessage.style.fontWeight = 'bold';
+            offlineMessage.style.padding = '5px';
+            offlineMessage.style.textAlign = 'center';
+            
+            // Limpiar contenido anterior
+            worldScoresList.innerHTML = '';
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.setAttribute('colspan', '4');
+            cell.appendChild(offlineMessage);
+            row.appendChild(cell);
+            worldScoresList.appendChild(row);
+            
+            // Mostrar datos locales
+            if (worldScores.length > 0) {
+                worldScores.forEach((score, index) => {
+                    const scoreRow = document.createElement('tr');
+                    scoreRow.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${score.initials}</td>
+                        <td>${score.score}</td>
+                        <td>${score.country || 'XX'}</td>
+                    `;
+                    worldScoresList.appendChild(scoreRow);
+                });
+            }
+        } else if (worldScores.length === 0) {
+            worldScoresList.innerHTML = `<tr><td colspan="4">${translations[userLanguage]['syncingScores']}</td></tr>`;
+        } else {
+            worldScoresList.innerHTML = worldScores
+                .map((score, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${score.initials}</td>
+                        <td>${score.score}</td>
+                        <td>${score.country || 'XX'}</td>
+                    </tr>
+                `).join('');
+            
+            // Mostrar la última actualización
+            if (lastWorldScoreUpdate) {
+                const updateTimeElement = document.createElement('div');
+                updateTimeElement.classList.add('last-update');
+                updateTimeElement.textContent = `${translations[userLanguage]['lastUpdate']} ${lastWorldScoreUpdate.toLocaleTimeString()}`;
+                worldScoresList.parentNode.appendChild(updateTimeElement);
+            }
+        }
     }
 }
 
@@ -321,6 +438,14 @@ function initializeUI() {
     topScoresDiv = document.querySelector('.top-scores');
     toggleControlsBtn = document.getElementById('toggleControls');
     mobileControls = document.querySelector('.mobile-controls');
+    localTabBtn = document.getElementById('localTabBtn');
+    worldTabBtn = document.getElementById('worldTabBtn');
+    localScoresTab = document.getElementById('localScoresTab');
+    worldScoresTab = document.getElementById('worldScoresTab');
+    worldScoresList = document.getElementById('worldScoresList');
+    desktopTouchControls = document.querySelector('.desktop-touch-controls');
+    leftTouchControl = document.getElementById('leftTouchControl');
+    rightTouchControl = document.getElementById('rightTouchControl');
     
     // Crear el botón de instalación
     installButton = document.createElement('button');
@@ -340,12 +465,18 @@ function initializeUI() {
         if (toggleControlsBtn) {
             toggleControlsBtn.style.display = 'none';
         }
+        if (desktopTouchControls) {
+            desktopTouchControls.style.display = 'none';
+        }
     } else {
         if (mobileControls) {
             mobileControls.style.display = 'none';
         }
         if (toggleControlsBtn) {
             toggleControlsBtn.style.display = 'block';
+        }
+        if (desktopTouchControls) {
+            desktopTouchControls.style.display = 'none'; // Oculto por defecto, se mostrará al activar controles táctiles
         }
     }
     
@@ -357,22 +488,97 @@ function initializeUI() {
         toggleControlsBtn.addEventListener('click', toggleControls);
     }
     
+    // Event Listeners para pestañas de puntajes
+    if (localTabBtn) {
+        localTabBtn.addEventListener('click', () => {
+            localTabBtn.classList.add('active');
+            worldTabBtn.classList.remove('active');
+            localScoresTab.classList.add('active');
+            worldScoresTab.classList.remove('active');
+        });
+    }
+    
+    if (worldTabBtn) {
+        worldTabBtn.addEventListener('click', () => {
+            worldTabBtn.classList.add('active');
+            localTabBtn.classList.remove('active');
+            worldScoresTab.classList.add('active');
+            localScoresTab.classList.remove('active');
+            
+            // Iniciar sincronización de puntajes mundiales si no está activa
+            if (!stopWorldScoresSync) {
+                initWorldScoresSync();
+            }
+        });
+    }
+    
     // Event Listeners
     startButton.addEventListener('click', startGame);
     document.addEventListener('keydown', handleKeyPress);
     
-    // Controles móviles
-    ['up', 'down', 'left', 'right'].forEach(dir => {
-        const button = document.getElementById(`${dir}Button`);
-        if (button) {
-            button.addEventListener('click', () => {
-                if (!isPaused) {
-                    const opposites = { up: 'down', down: 'up', left: 'right', right: 'left' };
-                    if (direction !== opposites[dir]) direction = dir;
+    // Controles de rotación
+    const leftRotateButton = document.getElementById('leftRotateButton');
+    const rightRotateButton = document.getElementById('rightRotateButton');
+    
+    if (leftRotateButton) {
+        leftRotateButton.addEventListener('click', () => {
+            if (!isPaused) {
+                // Rotar a la izquierda
+                switch(direction) {
+                    case 'up': direction = 'left'; break;
+                    case 'left': direction = 'down'; break;
+                    case 'down': direction = 'right'; break;
+                    case 'right': direction = 'up'; break;
                 }
-            });
-        }
-    });
+            }
+        });
+    }
+    
+    if (rightRotateButton) {
+        rightRotateButton.addEventListener('click', () => {
+            if (!isPaused) {
+                // Rotar a la derecha
+                switch(direction) {
+                    case 'up': direction = 'right'; break;
+                    case 'right': direction = 'down'; break;
+                    case 'down': direction = 'left'; break;
+                    case 'left': direction = 'up'; break;
+                }
+            }
+        });
+    }
+    
+    // Controles táctiles para escritorio
+    if (leftTouchControl) {
+        leftTouchControl.addEventListener('click', () => {
+            if (!isPaused) {
+                // Rotar a la izquierda
+                switch(direction) {
+                    case 'up': direction = 'left'; break;
+                    case 'left': direction = 'down'; break;
+                    case 'down': direction = 'right'; break;
+                    case 'right': direction = 'up'; break;
+                }
+            }
+        });
+    }
+    
+    if (rightTouchControl) {
+        rightTouchControl.addEventListener('click', () => {
+            if (!isPaused) {
+                // Rotar a la derecha
+                switch(direction) {
+                    case 'up': direction = 'right'; break;
+                    case 'right': direction = 'down'; break;
+                    case 'down': direction = 'left'; break;
+                    case 'left': direction = 'up'; break;
+                }
+            }
+        });
+    }
+    
+    // Iniciar sincronización de puntajes mundiales
+    initWorldScoresSync();
     
     // Configurar el botón de instalación
     installButton.addEventListener('click', async () => {
@@ -384,10 +590,32 @@ function initializeUI() {
         installButton.style.display = 'none';
     });
     
+    // Función para iniciar la sincronización de puntajes mundiales
+    function initWorldScoresSync() {
+        // Detener sincronización anterior si existe
+        if (stopWorldScoresSync) {
+            stopWorldScoresSync();
+        }
+        
+        // Iniciar nueva sincronización
+        stopWorldScoresSync = startWorldScoresSync(scores => {
+            worldScores = scores;
+            lastWorldScoreUpdate = new Date();
+            updateWorldScoresDisplay();
+        }, 30000); // Actualizar cada 30 segundos
+    }
+    
     // Inicializar el juego y mostrar puntuaciones
     initGame();
     updateHighScoreDisplay();
     highScoreText.textContent = highScore;
+    
+    // Cargar puntajes mundiales iniciales
+    getWorldScores().then(scores => {
+        worldScores = scores;
+        lastWorldScoreUpdate = new Date();
+        updateWorldScoresDisplay();
+    });
 }
 
 // Variables para la instalación de la PWA

@@ -48,6 +48,9 @@ canvas {
     color: white;
     width: 80%;
     max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .game-logo {
@@ -99,9 +102,9 @@ canvas {
 }
 
 .mobile-controls button {
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
     margin: 5px;
     background-color: rgba(76, 175, 80, 0.8);
     color: white;
@@ -111,11 +114,49 @@ canvas {
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
-.horizontal-controls {
+.desktop-touch-controls {
+    display: none; /* Oculto por defecto, se mostrará con JS */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.touch-control-button {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(76, 175, 80, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+#leftTouchControl {
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#rightTouchControl {
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.rotation-controls {
     display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin: 10px 0;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 20px;
+    margin: 20px 0;
+    box-sizing: border-box;
 }
 
 .top-scores-container {
@@ -145,6 +186,36 @@ canvas {
     display: none; /* Oculto por defecto, se mostrará con JS */
 }
 
+.score-tabs {
+    display: flex;
+    border-bottom: 1px solid #4CAF50;
+    margin-bottom: 10px;
+}
+
+.score-tab {
+    background-color: transparent;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    opacity: 0.7;
+    flex: 1;
+}
+
+.score-tab.active {
+    opacity: 1;
+    border-bottom: 2px solid #4CAF50;
+    font-weight: bold;
+}
+
+.score-tab-content {
+    display: none;
+}
+
+.score-tab-content.active {
+    display: block;
+}
+
 .top-scores table {
     width: 100%;
     border-collapse: collapse;
@@ -160,11 +231,12 @@ canvas {
     background-color: #4CAF50;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    margin: 10px 0;
+    font-size: 18px;
+    margin: 20px 0 10px 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 #startButton:hover {

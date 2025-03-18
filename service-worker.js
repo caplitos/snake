@@ -4,6 +4,7 @@ const urlsToCache = [
   '/index.html',
   '/styles.css',
   '/game.js',
+  '/api.js',
   '/manifest.json',
   '/icons/android/android-launchericon-48-48.png',
   '/icons/android/android-launchericon-72-72.png',

@@ -16,17 +16,37 @@
         <div class="top-scores-container">
             <button id="toggleScores" class="toggle-scores">TOP ▼</button>
             <div class="top-scores">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th class="lang-player">Jugador</th>
-                            <th class="lang-points">Puntos</th>
-                        </tr>
-                    </thead>
-                    <tbody id="highScoresList">
-                    </tbody>
-                </table>
+                <div class="score-tabs">
+                    <button id="localTabBtn" class="score-tab active">Local</button>
+                    <button id="worldTabBtn" class="score-tab">Mundial</button>
+                </div>
+                <div id="localScoresTab" class="score-tab-content active">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th class="lang-player">Jugador</th>
+                                <th class="lang-points">Puntos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="highScoresList">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="worldScoresTab" class="score-tab-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th class="lang-player">Jugador</th>
+                                <th class="lang-points">Puntos</th>
+                                <th>País</th>
+                            </tr>
+                        </thead>
+                        <tbody id="worldScoresList">
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
@@ -43,15 +63,17 @@
             <canvas id="gameCanvas"></canvas>
             <div class="score"><span class="lang-score">Puntuación</span>: <span id="scoreText">0</span></div>
             <div class="mobile-controls">
-                <button id="upButton">↑</button>
-                <div class="horizontal-controls">
-                    <button id="leftButton">←</button>
-                    <button id="rightButton">→</button>
+                <div class="rotation-controls">
+                    <button id="leftRotateButton" class="touch-button">↺</button>
+                    <button id="rightRotateButton" class="touch-button">↻</button>
                 </div>
-                <button id="downButton">↓</button>
+            </div>
+            <div class="desktop-touch-controls">
+                <button id="leftTouchControl" class="touch-control-button">👆</button>
+                <button id="rightTouchControl" class="touch-control-button">👆</button>
             </div>
         </div>
     </div>
-    <script src="game.js"></script>
+    <script type="module" src="game.js"></script>
 </body>
 </html>
