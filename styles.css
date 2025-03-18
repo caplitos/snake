@@ -10,7 +10,8 @@ body {
 
 .game-wrapper {
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     gap: 20px;
 }
 
@@ -63,8 +64,21 @@ canvas {
 }
 
 .mobile-controls {
-    display: none;
+    display: block;
     margin-top: 20px;
+}
+
+.mobile-controls button {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    margin: 5px;
+    background-color: rgba(76, 175, 80, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 .horizontal-controls {
@@ -80,6 +94,7 @@ canvas {
     border-radius: 10px;
     color: white;
     min-width: 200px;
+    margin-bottom: 20px;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
@@ -103,23 +118,18 @@ canvas {
     border-bottom: 1px solid #4CAF50;
 }
 
-.instructions {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #888;
-}
-
 @media (max-width: 768px) {
-    .mobile-controls {
-        display: block;
+    .game-wrapper {
+        width: 95%;
     }
     
-    .game-wrapper {
-        flex-direction: column;
-        align-items: center;
+    .mobile-controls button {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
     }
     
     .top-scores {
-        margin-top: 20px;
+        width: 100%;
     }
 }

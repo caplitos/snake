@@ -13,25 +13,6 @@
 </head>
 <body>
     <div class="game-wrapper">
-        <div class="game-container">
-            <div id="menu" class="menu">
-                <h1>Snake Game</h1>
-                <button id="startButton">Iniciar Juego</button>
-                <p>Récord: <span id="highScore">0</span></p>
-                <p class="instructions">Presiona ENTER o ESPACIO para comenzar</p>
-            </div>
-            <canvas id="gameCanvas"></canvas>
-            <div class="score">Puntuación: <span id="scoreText">0</span></div>
-            <div class="mobile-controls">
-                <button id="upButton">↑</button>
-                <div class="horizontal-controls">
-                    <button id="leftButton">←</button>
-                    <button id="rightButton">→</button>
-                </div>
-                <button id="downButton">↓</button>
-            </div>
-        </div>
-        
         <div class="top-scores">
             <h2>TOP</h2>
             <table>
@@ -45,6 +26,24 @@
                 <tbody id="highScoresList">
                 </tbody>
             </table>
+        </div>
+        
+        <div class="game-container">
+            <div id="menu" class="menu">
+                <h1>Snake Game</h1>
+                <button id="startButton">Iniciar Juego</button>
+                <p>Récord: <span id="highScore">0</span></p>
+            </div>
+            <canvas id="gameCanvas"></canvas>
+            <div class="score">Puntuación: <span id="scoreText">0</span></div>
+            <div class="mobile-controls">
+                <button id="upButton">↑</button>
+                <div class="horizontal-controls">
+                    <button id="leftButton">←</button>
+                    <button id="rightButton">→</button>
+                </div>
+                <button id="downButton">↓</button>
+            </div>
         </div>
     </div>
     <script src="game.js"></script>
