@@ -13,29 +13,35 @@
 </head>
 <body>
     <div class="game-wrapper">
-        <div class="top-scores">
-            <h2>TOP</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Jugador</th>
-                        <th>Puntos</th>
-                    </tr>
-                </thead>
-                <tbody id="highScoresList">
-                </tbody>
-            </table>
+        <div class="top-scores-container">
+            <button id="toggleScores" class="toggle-scores">TOP ▼</button>
+            <div class="top-scores">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th class="lang-player">Jugador</th>
+                            <th class="lang-points">Puntos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="highScoresList">
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <div class="game-container">
             <div id="menu" class="menu">
-                <h1>Snake Game</h1>
-                <button id="startButton">Iniciar Juego</button>
-                <p>Récord: <span id="highScore">0</span></p>
+                <div class="game-logo">
+                    <img src="icons/android/android-launchericon-96-96.png" alt="Snake" class="game-icon">
+                    <h1>Snake</h1>
+                </div>
+                <button id="startButton" class="lang-start">Iniciar Juego</button>
+                <p><span class="lang-record">Récord</span>: <span id="highScore">0</span></p>
+                <button id="toggleControls" class="toggle-controls lang-touch">Controles táctiles</button>
             </div>
             <canvas id="gameCanvas"></canvas>
-            <div class="score">Puntuación: <span id="scoreText">0</span></div>
+            <div class="score"><span class="lang-score">Puntuación</span>: <span id="scoreText">0</span></div>
             <div class="mobile-controls">
                 <button id="upButton">↑</button>
                 <div class="horizontal-controls">

@@ -9,6 +9,45 @@ const highScoreText = document.getElementById('highScore');
 const HIGH_SCORES_KEY = 'snakeHighScores';
 const LAST_PLAYER_KEY = 'lastPlayer';
 
+// Configuración de idiomas
+const translations = {
+    'es': {
+        'start': 'Iniciar Juego',
+        'playAgain': 'Jugar de nuevo',
+        'score': 'Puntuación',
+        'record': 'Récord',
+        'player': 'Jugador',
+        'points': 'Puntos',
+        'gameOver': '¡Juego terminado!',
+        'enterInitials': 'Ingresa tus iniciales (3 caracteres):',
+        'touch': 'Controles táctiles',
+        'installApp': 'Instala el Juego'
+    },
+    'en': {
+        'start': 'Start Game',
+        'playAgain': 'Play Again',
+        'score': 'Score',
+        'record': 'Record',
+        'player': 'Player',
+        'points': 'Points',
+        'gameOver': 'Game Over!',
+        'enterInitials': 'Enter your initials (3 characters):',
+        'touch': 'Touch Controls',
+        'installApp': 'Install Game'
+    }
+};
+
+// Detectar idioma del navegador
+let userLanguage = navigator.language.split('-')[0];
+if (!translations[userLanguage]) {
+    userLanguage = 'en'; // Idioma por defecto
+}
+
+// Detectar si es dispositivo táctil
+const isTouchDevice = ('ontouchstart' in window) || 
+                      (navigator.maxTouchPoints > 0) ||
+                      (navigator.msMaxTouchPoints > 0);
+
 canvas.width = 400;
 canvas.height = 400;
 const gridSize = 20;
@@ -23,7 +62,12 @@ let highScore = localStorage.getItem('snakeHighScore') || 0;
 let playerInitials = localStorage.getItem(LAST_PLAYER_KEY) || 'XXX';
 let highScores = JSON.parse(localStorage.getItem(HIGH_SCORES_KEY) || '[]');
 
-highScoreText.textContent = highScore;
+// Elementos adicionales - Aseguramos que se inicialicen después de DOMContentLoaded
+let toggleScoresBtn;
+let topScoresDiv;
+let toggleControlsBtn;
+let mobileControls;
+let installButton;
 
 function initGame() {
     snake = [{ x: 200, y: 200 }];
@@ -108,6 +152,61 @@ function checkCollision() {
     return false;
 }
 
+// Aplicar traducciones
+function applyTranslations() {
+    document.querySelectorAll('[class*="lang-"]').forEach(element => {
+        const classes = Array.from(element.classList);
+        const langClass = classes.find(cls => cls.startsWith('lang-'));
+        if (langClass) {
+            const key = langClass.replace('lang-', '');
+            if (translations[userLanguage][key]) {
+                if (element.tagName === 'INPUT' || element.tagName === 'BUTTON') {
+                    element.value = translations[userLanguage][key];
+                } else {
+                    element.textContent = translations[userLanguage][key];
+                }
+            }
+        }
+    });
+    
+    // Actualizar textos específicos con verificación de existencia
+    if (startButton) startButton.textContent = translations[userLanguage]['start'];
+    
+    if (toggleControlsBtn) {
+        toggleControlsBtn.textContent = translations[userLanguage]['touch'];
+    }
+    
+    if (toggleScoresBtn) {
+        toggleScoresBtn.textContent = 'TOP ▼';
+    }
+    
+    // Actualizar el texto del botón de instalación
+    if (installButton) {
+        installButton.textContent = translations[userLanguage]['installApp'];
+    }
+}
+
+// Función para mostrar/ocultar puntuaciones
+function toggleScores() {
+    if (topScoresDiv.style.display === 'block') {
+        topScoresDiv.style.display = 'none';
+        toggleScoresBtn.textContent = 'TOP ▼';
+    } else {
+        topScoresDiv.style.display = 'block';
+        toggleScoresBtn.textContent = 'TOP ▲';
+    }
+}
+
+// Función para mostrar/ocultar controles táctiles
+function toggleControls() {
+    if (mobileControls.style.display === 'block') {
+        mobileControls.style.display = 'none';
+    } else {
+        mobileControls.style.display = 'block';
+    }
+}
+
+// Guardar solo el puntaje más alto por jugador
 function saveHighScore() {
     const newScore = {
         initials: playerInitials,
@@ -115,40 +214,58 @@ function saveHighScore() {
         date: new Date().toLocaleDateString()
     };
     
-    highScores.push(newScore);
+    // Verificar si el jugador ya tiene un puntaje guardado
+    const existingPlayerIndex = highScores.findIndex(s => s.initials === playerInitials);
+    
+    if (existingPlayerIndex !== -1) {
+        // Si el jugador ya existe, actualizar solo si el nuevo puntaje es mayor
+        if (score > highScores[existingPlayerIndex].score) {
+            highScores[existingPlayerIndex] = newScore;
+        }
+    } else {
+        // Si es un nuevo jugador, agregar a la lista
+        highScores.push(newScore);
+    }
+    
     highScores.sort((a, b) => b.score - a.score);
-    highScores = highScores.slice(0, 3); // Cambiado de 5 a 3 mejores puntajes
+    highScores = highScores.slice(0, 3); // Mantener solo los 3 mejores
     
     localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(highScores));
     localStorage.setItem(LAST_PLAYER_KEY, playerInitials);
-}
-
-function updateHighScoreDisplay() {
-    const highScoresList = document.getElementById('highScoresList');
-    highScoresList.innerHTML = highScores
-        .map((score, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${score.initials}</td>
-                <td>${score.score}</td>
-            </tr>
-        `).join('');
 }
 
 function gameOver() {
     clearInterval(gameLoop);
     isPaused = true;
     
-    // Ask for player initials
-    const newInitials = prompt(`¡Juego terminado! Puntuación: ${score}\nIngresa tus iniciales (3 caracteres):`, playerInitials);
+    // Ask for player initials with translated text
+    const newInitials = prompt(
+        `${translations[userLanguage]['gameOver']} ${score}\n${translations[userLanguage]['enterInitials']}`, 
+        playerInitials
+    );
+    
     if (newInitials) {
         playerInitials = newInitials.slice(0, 3).toUpperCase();
         saveHighScore();
     }
     
     menu.style.display = 'block';
-    startButton.textContent = 'Jugar de nuevo';
+    startButton.textContent = translations[userLanguage]['playAgain'];
     updateHighScoreDisplay();
+}
+
+function updateHighScoreDisplay() {
+    const highScoresList = document.getElementById('highScoresList');
+    if (highScoresList) {
+        highScoresList.innerHTML = highScores
+            .map((score, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${score.initials}</td>
+                    <td>${score.score}</td>
+                </tr>
+            `).join('');
+    }
 }
 
 function update() {
@@ -197,26 +314,84 @@ function startGame() {
     gameLoop = setInterval(update, 100);
 }
 
-// Event Listeners
-startButton.addEventListener('click', startGame);
-document.addEventListener('keydown', handleKeyPress);
-
-// Controles móviles
-['up', 'down', 'left', 'right'].forEach(dir => {
-    const button = document.getElementById(`${dir}Button`);
-    if (button) {
-        button.addEventListener('click', () => {
-            if (!isPaused) {
-                const opposites = { up: 'down', down: 'up', left: 'right', right: 'left' };
-                if (direction !== opposites[dir]) direction = dir;
-            }
-        });
+// Inicialización de la interfaz según el dispositivo
+function initializeUI() {
+    // Inicializar elementos DOM
+    toggleScoresBtn = document.getElementById('toggleScores');
+    topScoresDiv = document.querySelector('.top-scores');
+    toggleControlsBtn = document.getElementById('toggleControls');
+    mobileControls = document.querySelector('.mobile-controls');
+    
+    // Crear el botón de instalación
+    installButton = document.createElement('button');
+    installButton.style.display = 'none';
+    installButton.textContent = translations[userLanguage]['installApp'];
+    installButton.classList.add('install-button');
+    document.querySelector('.game-container').appendChild(installButton);
+    
+    // Aplicar traducciones
+    applyTranslations();
+    
+    // Configurar visibilidad de controles según el dispositivo
+    if (isTouchDevice) {
+        if (mobileControls) {
+            mobileControls.style.display = 'block';
+        }
+        if (toggleControlsBtn) {
+            toggleControlsBtn.style.display = 'none';
+        }
+    } else {
+        if (mobileControls) {
+            mobileControls.style.display = 'none';
+        }
+        if (toggleControlsBtn) {
+            toggleControlsBtn.style.display = 'block';
+        }
     }
-});
+    
+    // Event listeners para los nuevos botones
+    if (toggleScoresBtn) {
+        toggleScoresBtn.addEventListener('click', toggleScores);
+    }
+    if (toggleControlsBtn) {
+        toggleControlsBtn.addEventListener('click', toggleControls);
+    }
+    
+    // Event Listeners
+    startButton.addEventListener('click', startGame);
+    document.addEventListener('keydown', handleKeyPress);
+    
+    // Controles móviles
+    ['up', 'down', 'left', 'right'].forEach(dir => {
+        const button = document.getElementById(`${dir}Button`);
+        if (button) {
+            button.addEventListener('click', () => {
+                if (!isPaused) {
+                    const opposites = { up: 'down', down: 'up', left: 'right', right: 'left' };
+                    if (direction !== opposites[dir]) direction = dir;
+                }
+            });
+        }
+    });
+    
+    // Configurar el botón de instalación
+    installButton.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Usuario respondió: ${outcome}`);
+        deferredPrompt = null;
+        installButton.style.display = 'none';
+    });
+    
+    // Inicializar el juego y mostrar puntuaciones
+    initGame();
+    updateHighScoreDisplay();
+    highScoreText.textContent = highScore;
+}
 
-// Inicializar el juego y mostrar puntuaciones
-initGame();
-updateHighScoreDisplay();
+// Variables para la instalación de la PWA
+let deferredPrompt;
 
 // Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
@@ -231,38 +406,19 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Mostrar banner de instalación
-let deferredPrompt;
-const installButton = document.createElement('button');
-installButton.style.display = 'none';
-installButton.textContent = 'Instalar App';
-installButton.classList.add('install-button');
-document.querySelector('.game-container').appendChild(installButton);
-
+// Configurar eventos de instalación
 window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevenir que Chrome muestre automáticamente el prompt
     e.preventDefault();
-    // Guardar el evento para usarlo después
     deferredPrompt = e;
-    // Mostrar el botón de instalación
-    installButton.style.display = 'block';
-});
-
-installButton.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    // Mostrar el prompt de instalación
-    deferredPrompt.prompt();
-    // Esperar a que el usuario responda
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`Usuario respondió: ${outcome}`);
-    // Ya no necesitamos el evento
-    deferredPrompt = null;
-    // Ocultar el botón
-    installButton.style.display = 'none';
+    if (installButton) installButton.style.display = 'block';
 });
 
 window.addEventListener('appinstalled', (e) => {
     console.log('Aplicación instalada');
-    // Ocultar el botón de instalación
-    installButton.style.display = 'none';
+    if (installButton) installButton.style.display = 'none';
+});
+
+// Inicializar la interfaz después de cargar la página
+window.addEventListener('DOMContentLoaded', () => {
+    initializeUI();
 });

@@ -12,18 +12,22 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
+    width: 100%;
+    max-width: 500px;
 }
 
 .game-container {
     text-align: center;
     position: relative;
+    width: 100%;
 }
 
 canvas {
     border: 2px solid #fff;
     background-color: #000;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    max-width: 100%;
 }
 
 .score {
@@ -42,6 +46,21 @@ canvas {
     border-radius: 10px;
     z-index: 100;
     color: white;
+    width: 80%;
+    max-width: 300px;
+}
+
+.game-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.game-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 10px;
 }
 
 .install-button {
@@ -63,8 +82,19 @@ canvas {
     background-color: #45a049;
 }
 
+.toggle-controls {
+    margin-top: 10px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: none; /* Oculto por defecto, se mostrará con JS */
+}
+
 .mobile-controls {
-    display: block;
+    display: none; /* Oculto por defecto, se mostrará con JS */
     margin-top: 20px;
 }
 
@@ -88,39 +118,64 @@ canvas {
     margin: 10px 0;
 }
 
-.top-scores {
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 15px;
-    border-radius: 10px;
-    color: white;
-    min-width: 200px;
-    margin-bottom: 20px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+.top-scores-container {
+    width: 100%;
+    margin-bottom: 10px;
 }
 
-.top-scores h2 {
+.toggle-scores {
+    width: 100%;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+    font-weight: bold;
     text-align: center;
-    margin-top: 0;
-    color: #4CAF50;
-    border-bottom: 2px solid #4CAF50;
-    padding-bottom: 5px;
+}
+
+.top-scores {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 0 0 5px 5px;
+    color: white;
+    width: 100%;
+    box-sizing: border-box;
+    display: none; /* Oculto por defecto, se mostrará con JS */
 }
 
 .top-scores table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
 }
 
 .top-scores th, .top-scores td {
-    padding: 8px;
+    padding: 6px;
     text-align: center;
     border-bottom: 1px solid #4CAF50;
 }
 
+#startButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+#startButton:hover {
+    background-color: #45a049;
+}
+
 @media (max-width: 768px) {
     .game-wrapper {
-        width: 95%;
+        padding: 10px;
+        height: 100%;
+        justify-content: flex-start;
     }
     
     .mobile-controls button {
@@ -129,7 +184,9 @@ canvas {
         font-size: 28px;
     }
     
-    .top-scores {
-        width: 100%;
+    body {
+        height: auto;
+        padding: 0;
+        margin: 0;
     }
 }
