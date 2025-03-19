@@ -1,19 +1,22 @@
 // Código de inicialización - cargar recursos y configurar eventos
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias a elementos UI
-    menu = document.getElementById('menu');
-    startButton = document.getElementById('startButton');
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    scoreText = document.getElementById('scoreText');
-    highScoreText = document.getElementById('highScore');
+    const menu = document.getElementById('menu');
+    const startButton = document.getElementById('startButton');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreText = document.getElementById('scoreText');
+    const highScoreText = document.getElementById('highScore');
+    const levelText = document.getElementById('levelText');
+    const livesText = document.getElementById('livesText');
+    const pauseButton = document.getElementById('pauseButton');
     
     // Cargar sonidos utilizando los elementos de audio del HTML
-    eatSound = document.getElementById('eatSound');
-    crashSound = document.getElementById('crashSound');
-    powerUpSound = document.getElementById('powerupSound');
-    levelUpSound = document.getElementById('levelUpSound');
-    gameOverSound = document.getElementById('gameOverSound');
+    let eatSound = document.getElementById('eatSound');
+    let crashSound = document.getElementById('crashSound');
+    let powerUpSound = document.getElementById('powerupSound');
+    let levelUpSound = document.getElementById('levelUpSound');
+    let gameOverSound = document.getElementById('gameOverSound');
     
     // Asignar IDs para rastreo de carga
     if (eatSound) eatSound.id = 'eat';
@@ -21,6 +24,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (powerUpSound) powerUpSound.id = 'powerUp';
     if (levelUpSound) levelUpSound.id = 'levelUp';
     if (gameOverSound) gameOverSound.id = 'gameOver';
+    
+    // Inicializar objeto para rastrear la carga de sonidos
+    let soundsLoaded = {
+        eat: false,
+        crash: false,
+        powerUp: false,
+        levelUp: false,
+        gameOver: false
+    };
     
     // Asegurarse de que los elementos de audio estén listos para reproducirse
     [eatSound, crashSound, powerUpSound, levelUpSound, gameOverSound].forEach(sound => {
@@ -54,19 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Configurar eventos de botones
     startButton.addEventListener('click', () => {
-        setupGameMode('classic'); // Modo por defecto
+        startGame(); // Iniciar juego correctamente
     });
-    
-    // Configurar botones de modo de juego (asegurar que existan)
-    const classicModeBtn = document.getElementById('classicMode');
-    const mazeModeBtn = document.getElementById('mazeMode');
-    const timeModeBtn = document.getElementById('timeMode');
-    const battleModeBtn = document.getElementById('battleMode');
-    
-    if (classicModeBtn) classicModeBtn.addEventListener('click', () => setupGameMode('classic'));
-    if (mazeModeBtn) mazeModeBtn.addEventListener('click', () => setupGameMode('maze'));
-    if (timeModeBtn) timeModeBtn.addEventListener('click', () => setupGameMode('time'));
-    if (battleModeBtn) battleModeBtn.addEventListener('click', () => setupGameMode('battle'));
     
     // Botones de personalización y controles táctiles
     const toggleControlsBtn = document.getElementById('toggleControls');
@@ -81,8 +82,54 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Inicializar controles táctiles
     const mobileControls = document.querySelector('.mobile-controls');
-    if (mobileControls && isTouchDevice) {
-        mobileControls.style.display = 'block';
+    const desktopTouchControls = document.querySelector('.desktop-touch-controls');
+
+    // Configurar botones de rotación táctil
+    const leftRotateButton = document.getElementById('leftRotateButton');
+    const rightRotateButton = document.getElementById('rightRotateButton');
+    const leftTouchControl = document.getElementById('leftTouchControl');
+    const rightTouchControl = document.getElementById('rightTouchControl');
+
+    if (leftRotateButton) {
+        leftRotateButton.addEventListener('click', () => {
+            rotateDirection('left');
+        });
+    }
+
+    if (rightRotateButton) {
+        rightRotateButton.addEventListener('click', () => {
+            rotateDirection('right');
+        });
+    }
+
+    if (leftTouchControl) {
+        leftTouchControl.addEventListener('click', () => {
+            rotateDirection('left');
+        });
+    }
+
+    if (rightTouchControl) {
+        rightTouchControl.addEventListener('click', () => {
+            rotateDirection('right');
+        });
+    }
+
+    // Mostrar controles táctiles apropiados según el dispositivo
+    if (isTouchDevice) {
+        if (mobileControls) mobileControls.style.display = 'block';
+    } else {
+        // En escritorio, mostrar los controles táctiles solo si se activan
+        const toggleControlsBtn = document.getElementById('toggleControls');
+        if (toggleControlsBtn) {
+            toggleControlsBtn.style.display = 'block';
+            toggleControlsBtn.addEventListener('click', () => {
+                if (desktopTouchControls) {
+                    desktopTouchControls.style.display = 
+                        desktopTouchControls.style.display === 'none' || 
+                        desktopTouchControls.style.display === '' ? 'block' : 'none';
+                }
+            });
+        }
     }
     
     // Cargar puntuación máxima desde localStorage
@@ -176,13 +223,15 @@ function handleTouchMove(e) {
 }
 
 function togglePause() {
+    if (menu.style.display === 'block') return; // No pausar si el menú está visible
+    
     isPaused = !isPaused;
     
     // Mostrar mensaje de pausa
     if (isPaused) {
         const pauseMessage = document.createElement('div');
         pauseMessage.id = 'pauseMessage';
-        pauseMessage.textContent = translations[userLanguage]['paused'];
+        pauseMessage.textContent = translations[userLanguage]?.['paused'] || 'PAUSADO';
         pauseMessage.classList.add('pause-message');
         document.body.appendChild(pauseMessage);
     } else {
@@ -194,12 +243,18 @@ function togglePause() {
     }
 }
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const scoreText = document.getElementById('scoreText');
-const menu = document.getElementById('menu');
-const startButton = document.getElementById('startButton');
-const highScoreText = document.getElementById('highScore');
+// Configuración del botón de pausa
+if (pauseButton) {
+    pauseButton.addEventListener('click', togglePause);
+}
+
+// Mostrar controles táctiles si es un dispositivo táctil
+if (isTouchDevice) {
+    const toggleControlsBtn = document.getElementById('toggleControls');
+    if (toggleControlsBtn) {
+        toggleControlsBtn.style.display = 'block';
+    }
+}
 
 // Constantes para almacenamiento local
 const HIGHSCORE_KEY = 'snakeHighScore';
@@ -220,7 +275,6 @@ let gameSpeed = 150;
 let gridSize = 20;
 let level = 1;
 let lives = 3;
-let timeLeft = 60; // Para modo contrarreloj
 
 // Variables de sonido
 let eatSound;
@@ -239,25 +293,11 @@ let soundsLoaded = {
     gameOver: false
 };
 
-// Personalización
-let snakeColor = '#008000';
-let snakeHeadColor = '#006400';
-let foodStyle = 'classic';
-let gameMode = 'classic';
-
 // Power-ups
 let powerUps = [];
 let activePowerUp = null;
 let powerUpTimer = null;
 let isImmortal = false;
-
-// Obstáculos para modo laberinto
-let obstacles = [];
-
-// Modo batalla (2 jugadores)
-let player2Snake = [];
-let player2Direction = 'left';
-let player2Score = 0;
 
 // Configuración de idioma
 let userLanguage = 'en';
@@ -393,9 +433,31 @@ powerUpSound = new Audio();
 levelUpSound = new Audio();
 gameOverSound = new Audio();
 
+// Función para rotar la dirección de la serpiente
+function rotateDirection(rotation) {
+    if (isPaused) return;
+    
+    const directions = ['up', 'right', 'down', 'left'];
+    let currentIndex = directions.indexOf(direction);
+    
+    if (rotation === 'left') {
+        currentIndex = (currentIndex - 1 + 4) % 4;
+    } else if (rotation === 'right') {
+        currentIndex = (currentIndex + 1) % 4;
+    }
+    
+    const newDirection = directions[currentIndex];
+    
+    // Evitar que la serpiente gire 180 grados
+    const opposites = { 'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left' };
+    if (newDirection !== opposites[direction]) {
+        direction = newDirection;
+    }
+}
+
 // Función auxiliar para reproducir sonidos de forma segura
 function playSound(sound) {
-    if (sound && soundEnabled && soundsLoaded[sound.id]) {
+    if (sound && soundEnabled) {
         // Usar try-catch para manejar errores de reproducción
         try {
             // Reiniciar el sonido si ya estaba reproduciendo
@@ -488,10 +550,8 @@ function createFood() {
         food.type = 'special';
     }
     
-    // Evitar que la comida aparezca en la serpiente o en obstáculos
-    while (snake.some(segment => segment.x === food.x && segment.y === food.y) ||
-          obstacles.some(obs => obs.x === food.x && obs.y === food.y) ||
-          (gameMode === 'battle' && player2Snake.some(segment => segment.x === food.x && segment.y === food.y))) {
+    // Evitar que la comida aparezca en la serpiente
+    while (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
         food = {
             x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
             y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize,
@@ -501,8 +561,8 @@ function createFood() {
 }
 
 function createPowerUp() {
-    // Solo crear power-ups en determinados modos
-    if (gameMode === 'battle' || Math.random() >= 0.2) return;
+    // Probabilidad de crear power-up
+    if (Math.random() >= 0.2) return;
     
     const powerUpTypes = ['speed', 'slow', 'immortal', 'points2x', 'shrink'];
     const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
@@ -513,11 +573,9 @@ function createPowerUp() {
         type: randomType
     };
     
-    // Evitar que el power-up aparezca sobre la serpiente, comida u obstáculos
+    // Evitar que el power-up aparezca sobre la serpiente o comida
     while (snake.some(segment => segment.x === powerUp.x && segment.y === powerUp.y) ||
-          food.x === powerUp.x && food.y === powerUp.y ||
-          obstacles.some(obs => obs.x === powerUp.x && obs.y === powerUp.y) ||
-          (gameMode === 'battle' && player2Snake.some(segment => segment.x === powerUp.x && segment.y === powerUp.y))) {
+          food.x === powerUp.x && food.y === powerUp.y) {
         powerUp.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
         powerUp.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
     }
@@ -628,18 +686,14 @@ function getImageForPowerUp(type) {
 }
 
 function drawSnake() {
+    // Obtener el contexto del canvas
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
     // Dibujar el cuerpo de la serpiente con efecto de gradiente y bordes redondeados
     for (let i = 0; i < snake.length; i++) {
         // El tamaño puede variar si el powerup 'shrink' está activo
-        const size = (activePowerUp === 'shrink') ? gridSize * 0.7 : gridSize;
-        const offset = (activePowerUp === 'shrink') ? (gridSize - size) / 2 : 0;
-        const radius = size / 4; // Radio para bordes redondeados
-        
-        // Efecto visual para inmortalidad
-        if (isImmortal) {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#f1c40f';
-        }
+        const size = (activePowerUp === '
         
         // Cabeza de la serpiente
         if (i === 0) {
@@ -714,11 +768,6 @@ function drawSnake() {
     // Resetear el shadow
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
-    
-    // Dibujar serpiente del jugador 2 en modo batalla
-    if (gameMode === 'battle' && player2Snake.length > 0) {
-        drawPlayer2Snake();
-    }
 }
 
 function drawPlayer2Snake() {
@@ -739,6 +788,10 @@ function drawPlayer2Snake() {
 }
 
 function drawFood() {
+    // Obtener el canvas y el contexto
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
     // Añadir efecto de brillo para comida especial
     if (food.type === 'special') {
         ctx.shadowBlur = 15;
@@ -759,6 +812,10 @@ function drawFood() {
 }
 
 function drawPowerUps() {
+    // Obtener el canvas y el contexto
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
     for (const powerUp of powerUps) {
         // Añadir efecto de brillo
         ctx.shadowBlur = 8;
@@ -894,21 +951,7 @@ function setupGame() {
     activePowerUp = null;
     powerUpTimer = null;
     powerUps = [];
-    obstacles = [];
-    timeLeft = 60;
     lives = 3;
-    
-    // Resetear variables específicas de modo batalla
-    if (gameMode === 'battle') {
-        player2Snake = [{ x: 280, y: 280 }];
-        player2Direction = 'left';
-        player2Score = 0;
-    }
-    
-    // Crear obstáculos en modo laberinto
-    if (gameMode === 'maze') {
-        createObstacles();
-    }
     
     // Crear comida inicial
     createFood();
@@ -921,13 +964,8 @@ function setupGame() {
     document.getElementById('levelText').textContent = level;
     document.getElementById('livesText').textContent = lives;
     
-    // Iniciar temporizador en modo contrarreloj
-    if (gameMode === 'time') {
-        document.getElementById('timeLeft').textContent = timeLeft;
-        document.getElementById('timerDisplay').classList.remove('hidden');
-    } else {
-        document.getElementById('timerDisplay').classList.add('hidden');
-    }
+    // Ocultar elementos no utilizados
+    document.getElementById('timerDisplay').classList.add('hidden');
     
     // Resetear intervalo
     clearInterval(gameLoop);
@@ -935,38 +973,12 @@ function setupGame() {
     
     // Ocultar menú y mostrar el juego
     menu.style.display = 'none';
+    
+    // No mostrar botón de pausa
+    pauseButton.style.display = 'none';
 }
 
-function setupGameMode(mode) {
-    gameMode = mode;
-    
-    switch(mode) {
-        case 'classic':
-            // Configuración clásica
-            obstacles = [];
-            break;
-            
-        case 'maze':
-            // Configuración laberinto (los obstáculos se crean en setupGame)
-            break;
-            
-        case 'time':
-            // Configuración contrarreloj
-            timeLeft = 60; // 1 minuto
-            obstacles = [];
-            break;
-            
-        case 'battle':
-            // Configuración batalla (2 jugadores, uno AI)
-            player2Snake = [{ x: 280, y: 280 }];
-            player2Direction = 'left';
-            player2Score = 0;
-            obstacles = [];
-            break;
-    }
-    
-    setupGame();
-}
+// Función setupGameMode eliminada ya que solo usamos el modo clásico
 
 function applyCustomizations() {
     // Aplicar color de serpiente elegido
@@ -1178,7 +1190,7 @@ function moveSnake() {
         scoreText.textContent = score;
         if (score > highScore) {
             highScore = score;
-            localStorage.setItem('snakeHighScore', highScore);
+            localStorage.setItem(HIGHSCORE_KEY, highScore);
             highScoreText.textContent = highScore;
         }
         
@@ -1211,19 +1223,9 @@ function moveSnake() {
             setTimeout(() => {
                 levelElement.classList.remove('pulse');
             }, 300);
-            
-            // Crear obstáculos nuevos en modo laberinto
-            if (gameMode === 'maze') {
-                createObstacles();
-            }
         }
     } else {
         snake.pop();
-    }
-    
-    // Mover segundo jugador en modo batalla
-    if (gameMode === 'battle' && player2Snake.length > 0) {
-        movePlayer2();
     }
     
     // Verificar power-ups
@@ -1351,18 +1353,6 @@ function checkCollision() {
     // Colisión con bordes
     let wallCollision = head.x < 0 || head.x >= canvas.width || 
                         head.y < 0 || head.y >= canvas.height;
-                        
-    // Colisión con obstáculos en modo laberinto
-    let obstacleCollision = false;
-    if (gameMode === 'maze') {
-        obstacleCollision = obstacles.some(obs => head.x === obs.x && head.y === obs.y);
-    }
-    
-    // Colisión con la otra serpiente en modo batalla
-    let player2Collision = false;
-    if (gameMode === 'battle') {
-        player2Collision = player2Snake.some(segment => head.x === segment.x && head.y === segment.y);
-    }
 
     // Colisión consigo mismo
     let selfCollision = false;
@@ -1374,27 +1364,21 @@ function checkCollision() {
     }
     
     // Si hay colisión pero es inmortal, no contar como colisión
-    if ((wallCollision || obstacleCollision || selfCollision || player2Collision) && isImmortal) {
+    if ((wallCollision || selfCollision) && isImmortal) {
         return false;
     }
     
-    return wallCollision || obstacleCollision || selfCollision || player2Collision;
+    return wallCollision || selfCollision;
 }
 
 function update() {
     if (isPaused) return;
     
-    // Actualizar temporizador en modo contrarreloj
-    if (gameMode === 'time' && !isPaused) {
-        updateTimer();
-    }
+    // Obtener el canvas y el contexto
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Dibujar obstáculos en modo laberinto
-    if (gameMode === 'maze') {
-        drawObstacles();
-    }
     
     moveSnake();
     
@@ -1451,45 +1435,33 @@ function handleCollision() {
     }
 }
 
-function gameOver(reason = 'collision') {
+function gameOver() {
     clearInterval(gameLoop);
     isPaused = true;
-    
-    // Detener temporizador en modo contrarreloj
-    if (gameMode === 'time') {
-        clearInterval(timeInterval);
-    }
     
     // Reproducir sonido de game over
     if (soundEnabled) playSound(gameOverSound);
     
-    // Mensaje diferente según el motivo
-    let gameOverMessage = translations[userLanguage]['gameOver'];
-    if (reason === 'time') {
-        gameOverMessage += ' ' + translations[userLanguage]['timeUp'];
-    }
+    // Mensaje de game over
+    let gameOverMessage = translations[userLanguage]?.['gameOver'] || 'Game Over!';
     
     // Pedir iniciales
     const newInitials = prompt(
-        `${gameOverMessage} ${score}\n${translations[userLanguage]['enterInitials']}`, 
+        `${gameOverMessage} ${score}\n${translations[userLanguage]?.['enterInitials'] || 'Enter your initials:'}`, 
         playerInitials
     );
     
     if (newInitials) {
         playerInitials = newInitials.slice(0, 3).toUpperCase();
+        localStorage.setItem(INITIALS_KEY, playerInitials);
         saveHighScore();
     }
     
     menu.style.display = 'block';
-    startButton.textContent = translations[userLanguage]['playAgain'];
+    startButton.textContent = translations[userLanguage]?.['playAgain'] || 'Play Again';
     
-    // Eliminar el botón 'tryAgainButton' si existe para evitar duplicados
-    const existingTryAgainButton = document.getElementById('tryAgainButton');
-    if (existingTryAgainButton) {
-        existingTryAgainButton.remove();
-    }
-    
-    updateHighScoreDisplay();
+    // Ocultar botón de pausa
+    pauseButton.style.display = 'none';
 }
 
 // Manejo global de errores para que el juego no se bloquee
@@ -1534,12 +1506,6 @@ function loadImageSafely(src, fallbackColor = '#4CAF50') {
 // Función para iniciar el juego
 function startGame() {
     setupGame();
-    
-    // Iniciar el intervalo para modo contrarreloj
-    if (gameMode === 'time') {
-        if (timeInterval) clearInterval(timeInterval);
-        timeInterval = setInterval(updateTimer, 1000);
-    }
     
     // Configurar intervalo para power-ups
     if (powerUpInterval) clearInterval(powerUpInterval);
