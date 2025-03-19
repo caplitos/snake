@@ -405,24 +405,28 @@ function getImageForPowerUp(type) {
 }
 
 function drawSnake() {
-    // Dibujar el cuerpo de la serpiente
-    ctx.fillStyle = snakeColor;
+    // Dibujar el cuerpo de la serpiente con efecto de gradiente y bordes redondeados
     for (let i = 0; i < snake.length; i++) {
         // El tamaño puede variar si el powerup 'shrink' está activo
         const size = (activePowerUp === 'shrink') ? gridSize * 0.7 : gridSize;
         const offset = (activePowerUp === 'shrink') ? (gridSize - size) / 2 : 0;
+        const radius = size / 4; // Radio para bordes redondeados
         
         // Efecto visual para inmortalidad
-        if (isImmortal && i === 0) {
-            ctx.shadowBlur = 10;
+        if (isImmortal) {
+            ctx.shadowBlur = 15;
             ctx.shadowColor = '#f1c40f';
         }
         
         // Cabeza de la serpiente
         if (i === 0) {
-            // Dibujar cabeza con color distinto o forma diferente
+            // Dibujar cabeza con color distinto y forma redondeada
             ctx.fillStyle = '#006400';
-            ctx.fillRect(snake[i].x + offset, snake[i].y + offset, size, size);
+            
+            // Dibujar cabeza redondeada
+            ctx.beginPath();
+            ctx.roundRect(snake[i].x + offset, snake[i].y + offset, size, size, radius);
+            ctx.fill();
             
             // Dibujar ojos
             ctx.fillStyle = '#FFFFFF';
@@ -434,43 +438,59 @@ function drawSnake() {
                 case 'right':
                     eyeOffsetX = gridSize * 0.7;
                     eyeOffsetY = gridSize * 0.3;
-                    ctx.fillRect(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY, eyeSize, eyeSize);
-                    ctx.fillRect(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY + gridSize * 0.4, eyeSize, eyeSize);
+                    ctx.beginPath();
+                    ctx.arc(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY, eyeSize/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY + gridSize * 0.4, eyeSize/2, 0, Math.PI * 2);
+                    ctx.fill();
                     break;
                 case 'left':
                     eyeOffsetX = gridSize * 0.2;
                     eyeOffsetY = gridSize * 0.3;
-                    ctx.fillRect(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY, eyeSize, eyeSize);
-                    ctx.fillRect(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY + gridSize * 0.4, eyeSize, eyeSize);
+                    ctx.beginPath();
+                    ctx.arc(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY, eyeSize/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY + gridSize * 0.4, eyeSize/2, 0, Math.PI * 2);
+                    ctx.fill();
                     break;
                 case 'up':
                     eyeOffsetX = gridSize * 0.3;
                     eyeOffsetY = gridSize * 0.2;
-                    ctx.fillRect(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY, eyeSize, eyeSize);
-                    ctx.fillRect(snake[i].x + eyeOffsetX + gridSize * 0.4, snake[i].y + eyeOffsetY, eyeSize, eyeSize);
+                    ctx.beginPath();
+                    ctx.arc(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY, eyeSize/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(snake[i].x + eyeOffsetX + gridSize * 0.4, snake[i].y + eyeOffsetY, eyeSize/2, 0, Math.PI * 2);
+                    ctx.fill();
                     break;
                 case 'down':
                     eyeOffsetX = gridSize * 0.3;
                     eyeOffsetY = gridSize * 0.7;
-                    ctx.fillRect(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY, eyeSize, eyeSize);
-                    ctx.fillRect(snake[i].x + eyeOffsetX + gridSize * 0.4, snake[i].y + eyeOffsetY, eyeSize, eyeSize);
+                    ctx.beginPath();
+                    ctx.arc(snake[i].x + eyeOffsetX, snake[i].y + eyeOffsetY, eyeSize/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(snake[i].x + eyeOffsetX + gridSize * 0.4, snake[i].y + eyeOffsetY, eyeSize/2, 0, Math.PI * 2);
+                    ctx.fill();
                     break;
             }
-            
-            ctx.fillStyle = snakeColor;
         } else {
-            // Cuerpo: añadir gradiente de color
+            // Cuerpo: añadir gradiente de color y bordes redondeados
             const colorValue = Math.max(50, 180 - (i * 5));
             ctx.fillStyle = `rgb(0, ${colorValue}, 0)`;
-            ctx.fillRect(snake[i].x + offset, snake[i].y + offset, size, size);
-        }
-        
-        // Resetear el shadow
-        if (isImmortal && i === 0) {
-            ctx.shadowBlur = 0;
-            ctx.shadowColor = 'transparent';
+            
+            // Dibujar segmento redondeado
+            ctx.beginPath();
+            ctx.roundRect(snake[i].x + offset, snake[i].y + offset, size, size, radius);
+            ctx.fill();
         }
     }
+    
+    // Resetear el shadow
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
     
     // Dibujar serpiente del jugador 2 en modo batalla
     if (gameMode === 'battle' && player2Snake.length > 0) {
@@ -603,17 +623,16 @@ function setupGame() {
     // Iniciar temporizador en modo contrarreloj
     if (gameMode === 'time') {
         document.getElementById('timeLeft').textContent = timeLeft;
+        document.getElementById('timerDisplay').classList.remove('hidden');
+    } else {
+        document.getElementById('timerDisplay').classList.add('hidden');
     }
     
     // Resetear intervalo
     clearInterval(gameLoop);
     gameLoop = setInterval(update, gameSpeed);
     
-    // Mostrar HUD
-    document.getElementById('hud').style.display = 'flex';
-    document.getElementById('timeContainer').style.display = gameMode === 'time' ? 'flex' : 'none';
-    
-    // Ocultar menú
+    // Ocultar menú y mostrar el juego
     menu.style.display = 'none';
 }
 
@@ -1243,29 +1262,28 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton = document.getElementById('startButton');
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
-    scoreText = document.getElementById('score');
+    scoreText = document.getElementById('scoreText');
     highScoreText = document.getElementById('highScore');
     
-    // Cargar sonidos con manejo de errores
-    eatSound = new Audio();
-    crashSound = new Audio();
-    levelUpSound = new Audio();
-    gameOverSound = new Audio();
-    powerUpSound = new Audio();
+    // Cargar sonidos utilizando los elementos de audio del HTML
+    eatSound = document.getElementById('eatSound');
+    crashSound = document.getElementById('crashSound');
+    powerUpSound = document.getElementById('powerupSound');
+    levelUpSound = document.getElementById('levelUpSound');
+    gameOverSound = document.getElementById('gameOverSound');
     
-    function loadSoundWithFallback(audioElement, path) {
-        audioElement.src = path;
-        audioElement.onerror = function() {
-            console.log(`No se pudo cargar el sonido: ${path}`);
-            // No hacer nada, el juego continuará sin sonido
-        };
-    }
-    
-    loadSoundWithFallback(eatSound, 'assets/eat.wav');
-    loadSoundWithFallback(crashSound, 'assets/crash.wav');
-    loadSoundWithFallback(levelUpSound, 'assets/levelup.wav');
-    loadSoundWithFallback(gameOverSound, 'assets/gameover.wav');
-    loadSoundWithFallback(powerUpSound, 'assets/powerup.wav');
+    // Asegurarse de que los elementos de audio estén listos para reproducirse
+    [eatSound, crashSound, powerUpSound, levelUpSound, gameOverSound].forEach(sound => {
+        if (sound) {
+            // Precarga de sonidos
+            sound.load();
+            // Manejo de errores
+            sound.onerror = function() {
+                console.log(`No se pudo cargar el sonido: ${sound.src}`);
+                // El juego continuará sin sonido
+            };
+        }
+    });
     
     // Configurar controles del teclado
     document.addEventListener('keydown', handleKeyPress);
@@ -1276,7 +1294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Pausar/Reanudar con ESC
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !menu.style.display === 'block') {
+        if (e.key === 'Escape' && menu.style.display !== 'block') {
             togglePause();
         }
     });
@@ -1286,47 +1304,52 @@ document.addEventListener('DOMContentLoaded', () => {
         setupGameMode('classic'); // Modo por defecto
     });
     
-    document.getElementById('highScoreButton').addEventListener('click', showHighScores);
+    // Configurar botones de modo de juego (asegurar que existan)
+    const classicModeBtn = document.getElementById('classicMode');
+    const mazeModeBtn = document.getElementById('mazeMode');
+    const timeModeBtn = document.getElementById('timeMode');
+    const battleModeBtn = document.getElementById('battleMode');
     
-    document.getElementById('customizeButton').addEventListener('click', () => {
-        menu.style.display = 'none';
-        document.getElementById('customizeMenu').style.display = 'block';
-    });
+    if (classicModeBtn) classicModeBtn.addEventListener('click', () => setupGameMode('classic'));
+    if (mazeModeBtn) mazeModeBtn.addEventListener('click', () => setupGameMode('maze'));
+    if (timeModeBtn) timeModeBtn.addEventListener('click', () => setupGameMode('time'));
+    if (battleModeBtn) battleModeBtn.addEventListener('click', () => setupGameMode('battle'));
     
-    // Botones de modo de juego
-    document.getElementById('classicModeBtn').addEventListener('click', () => setupGameMode('classic'));
-    document.getElementById('mazeModeBtn').addEventListener('click', () => setupGameMode('maze'));
-    document.getElementById('timeModeBtn').addEventListener('click', () => setupGameMode('time'));
-    document.getElementById('battleModeBtn').addEventListener('click', () => setupGameMode('battle'));
+    // Botones de personalización y controles táctiles
+    const toggleControlsBtn = document.getElementById('toggleControls');
+    if (toggleControlsBtn) {
+        toggleControlsBtn.addEventListener('click', () => {
+            const mobileControls = document.querySelector('.mobile-controls');
+            if (mobileControls) {
+                mobileControls.style.display = mobileControls.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+    }
     
-    // Botones de personalización
-    document.getElementById('saveCustomButton').addEventListener('click', () => {
-        applyCustomizations();
-        document.getElementById('customizeMenu').style.display = 'none';
-        menu.style.display = 'block';
-    });
-    
-    document.getElementById('cancelCustomButton').addEventListener('click', () => {
-        document.getElementById('customizeMenu').style.display = 'none';
-        menu.style.display = 'block';
-    });
-    
-    // Configurar botones de idioma
-    document.getElementById('langEn').addEventListener('click', () => changeLanguage('en'));
-    document.getElementById('langEs').addEventListener('click', () => changeLanguage('es'));
+    // Inicializar controles táctiles
+    const mobileControls = document.querySelector('.mobile-controls');
+    if (mobileControls && isTouchDevice) {
+        mobileControls.style.display = 'block';
+    }
     
     // Cargar puntuación máxima desde localStorage
     highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0');
     highScoreText.textContent = highScore;
     
     // Cargar preferencia de idioma
-    userLanguage = localStorage.getItem(LANGUAGE_KEY) || 'en';
+    userLanguage = localStorage.getItem(LANGUAGE_KEY) || navigator.language.split('-')[0];
+    if (!translations[userLanguage]) {
+        userLanguage = 'en'; // Idioma por defecto
+    }
     
     // Cargar iniciales guardadas
     playerInitials = localStorage.getItem(INITIALS_KEY) || 'AAA';
     
     // Actualizar textos de la interfaz con el idioma elegido
     updateUITexts();
+    
+    // Inicializar el juego
+    initGame();
 });
 
 // Control de teclado
