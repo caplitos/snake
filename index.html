@@ -56,15 +56,75 @@
                     <img src="icons/android/android-launchericon-96-96.png" alt="Snake" class="game-icon">
                     <h1>Snake</h1>
                 </div>
+                
+                <!-- Nuevos botones de modos de juego -->
+                <div class="game-modes">
+                    <h3 class="lang-gamemode">Modo de Juego</h3>
+                    <div class="mode-buttons">
+                        <button id="classicMode" class="mode-button active" data-mode="classic">Clásico</button>
+                        <button id="mazeMode" class="mode-button" data-mode="maze">Laberinto</button>
+                        <button id="timeMode" class="mode-button" data-mode="time">Contrarreloj</button>
+                        <button id="battleMode" class="mode-button" data-mode="battle">Batalla</button>
+                    </div>
+                </div>
+                
+                <!-- Opciones de personalización -->
+                <div class="customization">
+                    <h3 class="lang-customization">Personalización</h3>
+                    <div class="color-options">
+                        <button class="color-btn" data-color="#4CAF50" style="background-color: #4CAF50;"></button>
+                        <button class="color-btn" data-color="#3498db" style="background-color: #3498db;"></button>
+                        <button class="color-btn" data-color="#e74c3c" style="background-color: #e74c3c;"></button>
+                        <button class="color-btn" data-color="#f1c40f" style="background-color: #f1c40f;"></button>
+                        <button class="color-btn" data-color="#9b59b6" style="background-color: #9b59b6;"></button>
+                    </div>
+                    
+                    <div class="theme-toggle">
+                        <span class="lang-theme">Tema:</span>
+                        <button id="lightTheme" class="theme-btn active">🌞</button>
+                        <button id="darkTheme" class="theme-btn">🌙</button>
+                    </div>
+                    
+                    <div class="sound-toggle">
+                        <label class="toggle-label">
+                            <span class="lang-sound">Sonido:</span>
+                            <input type="checkbox" id="soundToggle" checked>
+                            <span class="toggle-switch"></span>
+                        </label>
+                    </div>
+                </div>
+                
                 <button id="startButton" class="lang-start">Iniciar Juego</button>
                 <p><span class="lang-record">Récord</span>: <span id="highScore">0</span></p>
                 <button id="toggleControls" class="toggle-controls lang-touch">Controles táctiles</button>
             </div>
+            
+            <!-- HUD de power-ups -->
+            <div id="powerupHUD" class="powerup-hud">
+                <div id="activePowerup" class="active-powerup hidden">
+                    <img id="powerupIcon" src="" alt="Power-up">
+                    <div id="powerupTimer" class="powerup-timer"></div>
+                </div>
+            </div>
+            
             <canvas id="gameCanvas"></canvas>
+            
+            <!-- Temporizador para modo contrarreloj -->
+            <div id="timerDisplay" class="timer-display hidden">
+                <span class="lang-time">Tiempo</span>: <span id="timeLeft">60</span>s
+            </div>
+            
             <div class="game-info">
                 <div class="score"><span class="lang-score">Puntuación</span>: <span id="scoreText">0</span></div>
                 <div class="level"><span class="lang-level">Nivel</span>: <span id="levelText">1</span></div>
+                <!-- Indicador de vidas -->
+                <div class="lives"><span class="lang-lives">Vidas</span>: <span id="livesText">3</span></div>
             </div>
+            
+            <div class="pause-button">
+                <button id="pauseButton">⏸️</button>
+            </div>
+            
             <div class="mobile-controls">
                 <div class="rotation-controls">
                     <button id="leftRotateButton" class="touch-button">↺</button>
@@ -77,6 +137,14 @@
             </div>
         </div>
     </div>
+    
+    <!-- Crear carpeta de audio para los sonidos -->
+    <audio id="eatSound" src="audio/eat.mp3" preload="auto"></audio>
+    <audio id="crashSound" src="audio/crash.mp3" preload="auto"></audio>
+    <audio id="powerupSound" src="audio/powerup.mp3" preload="auto"></audio>
+    <audio id="levelUpSound" src="audio/levelup.mp3" preload="auto"></audio>
+    <audio id="gameOverSound" src="audio/gameover.mp3" preload="auto"></audio>
+    
     <script type="module" src="game.js"></script>
 </body>
 </html>

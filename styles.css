@@ -270,6 +270,262 @@ canvas {
     background-color: #45a049;
 }
 
+.game-modes {
+    margin: 15px 0;
+    width: 100%;
+}
+
+.mode-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.mode-button {
+    background-color: #34495e;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-button.active {
+    background-color: #4CAF50;
+    transform: scale(1.05);
+}
+
+.mode-button:hover {
+    background-color: #2980b9;
+}
+
+.customization {
+    margin: 15px 0;
+    width: 100%;
+}
+
+.color-options {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.color-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid white;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.color-btn:hover {
+    transform: scale(1.1);
+}
+
+.color-btn.active {
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.theme-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.theme-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid white;
+    background-color: #34495e;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.theme-btn.active {
+    background-color: #4CAF50;
+    transform: scale(1.1);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 12px;
+    transition: all 0.3s;
+}
+
+.toggle-switch:after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s;
+}
+
+input[type="checkbox"]:checked + .toggle-switch {
+    background-color: #4CAF50;
+}
+
+input[type="checkbox"]:checked + .toggle-switch:after {
+    left: 28px;
+}
+
+input[type="checkbox"] {
+    display: none;
+}
+
+.powerup-hud {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.active-powerup {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 5px;
+    border-radius: 5px;
+    color: white;
+}
+
+.active-powerup img {
+    width: 30px;
+    height: 30px;
+    margin-right: 5px;
+}
+
+.powerup-timer {
+    width: 50px;
+    height: 5px;
+    background-color: #3498db;
+    border-radius: 2px;
+}
+
+.hidden {
+    display: none;
+}
+
+.timer-display {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 18px;
+    z-index: 10;
+}
+
+.pause-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 20;
+}
+
+.pause-button button {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pause-button button:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.obstacle {
+    fill: #7f8c8d;
+    stroke: #2c3e50;
+    stroke-width: 2px;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(0, 0); }
+    10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
+    20%, 40%, 60%, 80% { transform: translate(5px, 0); }
+}
+
+.pulse {
+    animation: pulse 0.3s ease;
+}
+
+.shake {
+    animation: shake 0.5s ease;
+}
+
+.dark-theme {
+    background-color: #121212;
+}
+
+.light-theme {
+    background-color: #f5f5f5;
+}
+
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.player1-info, .player2-info {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.player1-info {
+    color: #4CAF50;
+}
+
+.player2-info {
+    color: #3498db;
+}
+
 @media (max-width: 768px) {
     .game-wrapper {
         padding: 10px;
