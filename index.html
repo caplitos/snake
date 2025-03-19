@@ -57,7 +57,7 @@
                     <h1>Snake</h1>
                 </div>
                 
-                <!-- Nuevos botones de modos de juego -->
+                <!-- Botones de modos de juego -->
                 <div class="game-modes">
                     <h3 class="lang-gamemode">Modo de Juego</h3>
                     <div class="mode-buttons">
@@ -138,13 +138,29 @@
         </div>
     </div>
     
-    <!-- Crear carpeta de audio para los sonidos -->
+    <!-- Archivos de audio -->
     <audio id="eatSound" src="audio/eat.mp3" preload="auto"></audio>
     <audio id="crashSound" src="audio/crash.mp3" preload="auto"></audio>
     <audio id="powerupSound" src="audio/powerup.mp3" preload="auto"></audio>
     <audio id="levelUpSound" src="audio/levelup.mp3" preload="auto"></audio>
     <audio id="gameOverSound" src="audio/gameover.mp3" preload="auto"></audio>
     
+    <!-- Registrar service worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registrado con éxito:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Error al registrar ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+    
+    <!-- Scripts de la aplicación -->
     <script type="module" src="game.js"></script>
 </body>
 </html>

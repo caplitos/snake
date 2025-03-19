@@ -1,3 +1,199 @@
+// Código de inicialización - cargar recursos y configurar eventos
+document.addEventListener('DOMContentLoaded', () => {
+    // Referencias a elementos UI
+    menu = document.getElementById('menu');
+    startButton = document.getElementById('startButton');
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    scoreText = document.getElementById('scoreText');
+    highScoreText = document.getElementById('highScore');
+    
+    // Cargar sonidos utilizando los elementos de audio del HTML
+    eatSound = document.getElementById('eatSound');
+    crashSound = document.getElementById('crashSound');
+    powerUpSound = document.getElementById('powerupSound');
+    levelUpSound = document.getElementById('levelUpSound');
+    gameOverSound = document.getElementById('gameOverSound');
+    
+    // Asignar IDs para rastreo de carga
+    if (eatSound) eatSound.id = 'eat';
+    if (crashSound) crashSound.id = 'crash';
+    if (powerUpSound) powerUpSound.id = 'powerUp';
+    if (levelUpSound) levelUpSound.id = 'levelUp';
+    if (gameOverSound) gameOverSound.id = 'gameOver';
+    
+    // Asegurarse de que los elementos de audio estén listos para reproducirse
+    [eatSound, crashSound, powerUpSound, levelUpSound, gameOverSound].forEach(sound => {
+        if (sound) {
+            // Precarga de sonidos
+            sound.load();
+            // Manejo de errores
+            sound.onerror = function() {
+                console.log(`No se pudo cargar el sonido: ${sound.src}`);
+                // El juego continuará sin sonido
+            };
+            sound.oncanplay = function() {
+                soundsLoaded[sound.id] = true;
+            };
+        }
+    });
+
+    // Configurar controles del teclado
+    document.addEventListener('keydown', handleKeyPress);
+    
+    // Configurar controles táctiles para dispositivos móviles
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    
+    // Pausar/Reanudar con ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu.style.display !== 'block') {
+            togglePause();
+        }
+    });
+    
+    // Configurar eventos de botones
+    startButton.addEventListener('click', () => {
+        setupGameMode('classic'); // Modo por defecto
+    });
+    
+    // Configurar botones de modo de juego (asegurar que existan)
+    const classicModeBtn = document.getElementById('classicMode');
+    const mazeModeBtn = document.getElementById('mazeMode');
+    const timeModeBtn = document.getElementById('timeMode');
+    const battleModeBtn = document.getElementById('battleMode');
+    
+    if (classicModeBtn) classicModeBtn.addEventListener('click', () => setupGameMode('classic'));
+    if (mazeModeBtn) mazeModeBtn.addEventListener('click', () => setupGameMode('maze'));
+    if (timeModeBtn) timeModeBtn.addEventListener('click', () => setupGameMode('time'));
+    if (battleModeBtn) battleModeBtn.addEventListener('click', () => setupGameMode('battle'));
+    
+    // Botones de personalización y controles táctiles
+    const toggleControlsBtn = document.getElementById('toggleControls');
+    if (toggleControlsBtn) {
+        toggleControlsBtn.addEventListener('click', () => {
+            const mobileControls = document.querySelector('.mobile-controls');
+            if (mobileControls) {
+                mobileControls.style.display = mobileControls.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+    }
+    
+    // Inicializar controles táctiles
+    const mobileControls = document.querySelector('.mobile-controls');
+    if (mobileControls && isTouchDevice) {
+        mobileControls.style.display = 'block';
+    }
+    
+    // Cargar puntuación máxima desde localStorage
+    highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0');
+    highScoreText.textContent = highScore;
+    
+    // Cargar preferencia de idioma
+    userLanguage = localStorage.getItem(LANGUAGE_KEY) || navigator.language.split('-')[0];
+    if (!translations[userLanguage]) {
+        userLanguage = 'en'; // Idioma por defecto
+    }
+    
+    // Cargar iniciales guardadas
+    playerInitials = localStorage.getItem(INITIALS_KEY) || 'AAA';
+    
+    // Actualizar textos de la interfaz con el idioma elegido
+    updateUITexts();
+    
+    // Inicializar el juego
+    initGame();
+});
+
+// Control de teclado
+function handleKeyPress(e) {
+    if (isPaused) return;
+    
+    // Prevenir el desplazamiento de la página con las flechas
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+        e.preventDefault();
+    }
+    
+    switch (e.key) {
+        case 'ArrowUp':
+            if (direction !== 'down') direction = 'up';
+            break;
+        case 'ArrowDown':
+            if (direction !== 'up') direction = 'down';
+            break;
+        case 'ArrowLeft':
+            if (direction !== 'right') direction = 'left';
+            break;
+        case 'ArrowRight':
+            if (direction !== 'left') direction = 'right';
+            break;
+        case ' ':
+            togglePause();
+            break;
+    }
+}
+
+// Control táctil para dispositivos móviles
+let touchStartX = 0;
+let touchStartY = 0;
+
+function handleTouchStart(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+}
+
+function handleTouchMove(e) {
+    if (isPaused) return;
+    
+    e.preventDefault();
+    
+    const touchEndX = e.touches[0].clientX;
+    const touchEndY = e.touches[0].clientY;
+    
+    const diffX = touchStartX - touchEndX;
+    const diffY = touchStartY - touchEndY;
+    
+    // Detectar si el movimiento fue horizontal o vertical
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+        // Movimiento horizontal
+        if (diffX > 0 && direction !== 'right') {
+            direction = 'left';
+        } else if (diffX < 0 && direction !== 'left') {
+            direction = 'right';
+        }
+    } else {
+        // Movimiento vertical
+        if (diffY > 0 && direction !== 'down') {
+            direction = 'up';
+        } else if (diffY < 0 && direction !== 'up') {
+            direction = 'down';
+        }
+    }
+    
+    // Actualizar posición de inicio para el próximo movimiento
+    touchStartX = touchEndX;
+    touchStartY = touchEndY;
+}
+
+function togglePause() {
+    isPaused = !isPaused;
+    
+    // Mostrar mensaje de pausa
+    if (isPaused) {
+        const pauseMessage = document.createElement('div');
+        pauseMessage.id = 'pauseMessage';
+        pauseMessage.textContent = translations[userLanguage]['paused'];
+        pauseMessage.classList.add('pause-message');
+        document.body.appendChild(pauseMessage);
+    } else {
+        // Eliminar mensaje de pausa
+        const pauseMessage = document.getElementById('pauseMessage');
+        if (pauseMessage) {
+            pauseMessage.remove();
+        }
+    }
+}
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreText = document.getElementById('scoreText');
@@ -33,6 +229,15 @@ let powerUpSound;
 let levelUpSound;
 let gameOverSound;
 let soundEnabled = localStorage.getItem(SOUND_KEY) !== 'false';
+
+// Variables para rastrear si los sonidos se cargaron correctamente
+let soundsLoaded = {
+    eat: false,
+    crash: false,
+    powerUp: false,
+    levelUp: false,
+    gameOver: false
+};
 
 // Personalización
 let snakeColor = '#008000';
@@ -159,7 +364,7 @@ gameSpeed = 150; // Velocidad inicial más lenta para los primeros niveles
 gameMode = localStorage.getItem('gameMode') || 'classic';
 obstacles = [];
 timeLeft = 60; // Para modo contrarreloj
-let timeInterval;
+let timeInterval; // Para el contador de tiempo
 player2Snake = []; // Para modo batalla
 player2Direction = 'left';
 player2Score = 0;
@@ -168,11 +373,13 @@ player2Score = 0;
 lives = 3;
 isImmortal = false;
 
+// Intervalos
+let powerUpInterval;
+
 // Power-ups
 powerUps = [];
 activePowerUp = null;
 powerUpDuration = 0;
-let powerUpInterval;
 
 // Personalización
 snakeColor = localStorage.getItem('snakeColor') || '#4CAF50';
@@ -185,6 +392,22 @@ crashSound = new Audio();
 powerUpSound = new Audio();
 levelUpSound = new Audio();
 gameOverSound = new Audio();
+
+// Función auxiliar para reproducir sonidos de forma segura
+function playSound(sound) {
+    if (sound && soundEnabled && soundsLoaded[sound.id]) {
+        // Usar try-catch para manejar errores de reproducción
+        try {
+            // Reiniciar el sonido si ya estaba reproduciendo
+            sound.currentTime = 0;
+            sound.play().catch(error => {
+                console.log(`Error al reproducir sonido: ${error.message}`);
+            });
+        } catch (error) {
+            console.log(`Error al reproducir sonido: ${error.message}`);
+        }
+    }
+}
 
 // Elementos adicionales - Aseguramos que se inicialicen después de DOMContentLoaded
 let toggleScoresBtn;
@@ -311,7 +534,7 @@ function createPowerUp() {
 }
 
 function activatePowerUp(type) {
-    if (soundEnabled) powerUpSound.play();
+    if (soundEnabled) playSound(powerUpSound);
     
     // Cancelar power-up activo anterior si existe
     if (activePowerUp) {
@@ -558,15 +781,29 @@ function drawPowerUps() {
 }
 
 function drawPowerUpIcon(x, y, iconUrl) {
-    // Cargar y dibujar el icono
-    const img = new Image(gridSize, gridSize);
-    
-    // Esta función es costosa, para una implementación real
-    // cachear todas las imágenes en el inicio
-    img.onload = function() {
-        ctx.drawImage(img, x, y, gridSize, gridSize);
-    };
-    img.src = iconUrl;
+    try {
+        // Intentar dibujar un ícono bonito
+        ctx.beginPath();
+        ctx.fillStyle = '#333';
+        ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Si tenemos una URL de icono, intentar cargarla y dibujarla
+        if (iconUrl) {
+            loadImageSafely(iconUrl, '#F9A825').then(img => {
+                ctx.drawImage(img, x, y, gridSize, gridSize);
+            });
+        } else {
+            // Fallback si no hay icono
+            ctx.fillStyle = '#F9A825';
+            ctx.fillRect(x + 5, y + 5, gridSize - 10, gridSize - 10);
+        }
+    } catch (error) {
+        // Fallback simple si hay algún error
+        console.log('Error al dibujar powerup:', error);
+        ctx.fillStyle = '#F9A825';
+        ctx.fillRect(x, y, gridSize, gridSize);
+    }
 }
 
 function drawObstacles() {
@@ -580,6 +817,70 @@ function drawObstacles() {
         ctx.fillRect(obstacle.x + gridSize / 4, obstacle.y + gridSize / 4, gridSize / 2, gridSize / 2);
         ctx.fillStyle = '#8B4513'; // Resetear color
     }
+}
+
+function createObstacles() {
+    obstacles = [];
+    
+    // Patrón de obstáculos según el nivel
+    const patternCount = Math.min(level, 5); // Máximo 5 patrones
+    
+    for (let i = 0; i < patternCount; i++) {
+        // Diferentes patrones de obstáculos
+        const patternType = Math.floor(Math.random() * 4);
+        
+        switch (patternType) {
+            case 0: // Línea horizontal
+                const y = Math.floor(Math.random() * (canvas.height / gridSize - 4) + 2) * gridSize;
+                const length = Math.floor(Math.random() * 5) + 3; // 3-7 bloques
+                const startX = Math.floor(Math.random() * (canvas.width / gridSize - length)) * gridSize;
+                
+                for (let j = 0; j < length; j++) {
+                    obstacles.push({ x: startX + j * gridSize, y });
+                }
+                break;
+                
+            case 1: // Línea vertical
+                const x = Math.floor(Math.random() * (canvas.width / gridSize - 4) + 2) * gridSize;
+                const height = Math.floor(Math.random() * 5) + 3; // 3-7 bloques
+                const startY = Math.floor(Math.random() * (canvas.height / gridSize - height)) * gridSize;
+                
+                for (let j = 0; j < height; j++) {
+                    obstacles.push({ x, y: startY + j * gridSize });
+                }
+                break;
+                
+            case 2: // Patrón en L
+                const cornerX = Math.floor(Math.random() * (canvas.width / gridSize - 6) + 3) * gridSize;
+                const cornerY = Math.floor(Math.random() * (canvas.height / gridSize - 6) + 3) * gridSize;
+                const legLength = Math.floor(Math.random() * 3) + 3; // 3-5 bloques
+                
+                for (let j = 0; j < legLength; j++) {
+                    obstacles.push({ x: cornerX - j * gridSize, y: cornerY });
+                    obstacles.push({ x: cornerX, y: cornerY + j * gridSize });
+                }
+                break;
+                
+            case 3: // Obstáculos aleatorios
+                const count = Math.floor(Math.random() * 5) + 3; // 3-7 obstáculos
+                
+                for (let j = 0; j < count; j++) {
+                    const randomX = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
+                    const randomY = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
+                    
+                    // Evitar colocar cerca del centro (posición inicial de la serpiente)
+                    if (Math.abs(randomX - 200) > 60 || Math.abs(randomY - 200) > 60) {
+                        obstacles.push({ x: randomX, y: randomY });
+                    }
+                }
+                break;
+        }
+    }
+    
+    // Asegurar que no haya obstáculos en la posición inicial de la serpiente
+    obstacles = obstacles.filter(obs => 
+        !snake.some(segment => Math.abs(segment.x - obs.x) < gridSize * 2 && 
+                               Math.abs(segment.y - obs.y) < gridSize * 2));
 }
 
 function setupGame() {
@@ -855,7 +1156,7 @@ function moveSnake() {
     // Verificar si comió comida
     if (head.x === food.x && head.y === food.y) {
         // Reproducir sonido
-        if (soundEnabled) eatSound.play();
+        if (soundEnabled) playSound(eatSound);
         
         // Añadir puntos según el tipo de comida
         let pointsToAdd = food.type === 'special' ? 25 : 10;
@@ -894,7 +1195,7 @@ function moveSnake() {
             level = newLevel;
             
             // Reproducir sonido de nivel
-            if (soundEnabled) levelUpSound.play();
+            if (soundEnabled) playSound(levelUpSound);
             
             // Aumentar velocidad gradualmente (reducir el intervalo)
             gameSpeed = Math.max(150 - (level - 1) * 10, 70);
@@ -1109,7 +1410,7 @@ function update() {
 
 function updateTimer() {
     if (timeLeft > 0) {
-        timeLeft -= 0.02; // Aproximadamente 20ms por cada llamada a update
+        timeLeft--;
         document.getElementById('timeLeft').textContent = Math.ceil(timeLeft);
     } else {
         // Tiempo agotado
@@ -1119,7 +1420,7 @@ function updateTimer() {
 
 function handleCollision() {
     // Reproducir sonido de choque
-    if (soundEnabled) crashSound.play();
+    if (soundEnabled) playSound(crashSound);
     
     // Efecto visual de choque
     canvas.classList.add('shake');
@@ -1160,7 +1461,7 @@ function gameOver(reason = 'collision') {
     }
     
     // Reproducir sonido de game over
-    if (soundEnabled) gameOverSound.play();
+    if (soundEnabled) playSound(gameOverSound);
     
     // Mensaje diferente según el motivo
     let gameOverMessage = translations[userLanguage]['gameOver'];
@@ -1191,252 +1492,60 @@ function gameOver(reason = 'collision') {
     updateHighScoreDisplay();
 }
 
-function createObstacles() {
-    obstacles = [];
-    
-    // Patrón de obstáculos según el nivel
-    const patternCount = Math.min(level, 5); // Máximo 5 patrones
-    
-    for (let i = 0; i < patternCount; i++) {
-        // Diferentes patrones de obstáculos
-        const patternType = Math.floor(Math.random() * 4);
+// Manejo global de errores para que el juego no se bloquee
+window.onerror = function(msg, url, line, col, error) {
+    console.log(`Error: ${msg} en ${url} (línea: ${line}, columna: ${col})`);
+    // Evitar que el juego se detenga completamente
+    return true;
+};
+
+// Función auxiliar para cargar imágenes de forma segura
+function loadImageSafely(src, fallbackColor = '#4CAF50') {
+    return new Promise((resolve) => {
+        if (!src || src === '') {
+            // Si no hay URL, crear un canvas como fallback
+            const canvas = document.createElement('canvas');
+            canvas.width = 20;
+            canvas.height = 20;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = fallbackColor;
+            ctx.fillRect(0, 0, 20, 20);
+            resolve(canvas);
+            return;
+        }
         
-        switch (patternType) {
-            case 0: // Línea horizontal
-                const y = Math.floor(Math.random() * (canvas.height / gridSize - 4) + 2) * gridSize;
-                const length = Math.floor(Math.random() * 5) + 3; // 3-7 bloques
-                const startX = Math.floor(Math.random() * (canvas.width / gridSize - length)) * gridSize;
-                
-                for (let j = 0; j < length; j++) {
-                    obstacles.push({ x: startX + j * gridSize, y });
-                }
-                break;
-                
-            case 1: // Línea vertical
-                const x = Math.floor(Math.random() * (canvas.width / gridSize - 4) + 2) * gridSize;
-                const height = Math.floor(Math.random() * 5) + 3; // 3-7 bloques
-                const startY = Math.floor(Math.random() * (canvas.height / gridSize - height)) * gridSize;
-                
-                for (let j = 0; j < height; j++) {
-                    obstacles.push({ x, y: startY + j * gridSize });
-                }
-                break;
-                
-            case 2: // Patrón en L
-                const cornerX = Math.floor(Math.random() * (canvas.width / gridSize - 6) + 3) * gridSize;
-                const cornerY = Math.floor(Math.random() * (canvas.height / gridSize - 6) + 3) * gridSize;
-                const legLength = Math.floor(Math.random() * 3) + 3; // 3-5 bloques
-                
-                for (let j = 0; j < legLength; j++) {
-                    obstacles.push({ x: cornerX - j * gridSize, y: cornerY });
-                    obstacles.push({ x: cornerX, y: cornerY + j * gridSize });
-                }
-                break;
-                
-            case 3: // Obstáculos aleatorios
-                const count = Math.floor(Math.random() * 5) + 3; // 3-7 obstáculos
-                
-                for (let j = 0; j < count; j++) {
-                    const randomX = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
-                    const randomY = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
-                    
-                    // Evitar colocar cerca del centro (posición inicial de la serpiente)
-                    if (Math.abs(randomX - 200) > 60 || Math.abs(randomY - 200) > 60) {
-                        obstacles.push({ x: randomX, y: randomY });
-                    }
-                }
-                break;
-        }
-    }
-    
-    // Asegurar que no haya obstáculos en la posición inicial de la serpiente
-    obstacles = obstacles.filter(obs => 
-        !snake.some(segment => Math.abs(segment.x - obs.x) < gridSize * 2 && 
-                               Math.abs(segment.y - obs.y) < gridSize * 2));
-}
-
-// Código de inicialización - cargar recursos y configurar eventos
-document.addEventListener('DOMContentLoaded', () => {
-    // Referencias a elementos UI
-    menu = document.getElementById('menu');
-    startButton = document.getElementById('startButton');
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    scoreText = document.getElementById('scoreText');
-    highScoreText = document.getElementById('highScore');
-    
-    // Cargar sonidos utilizando los elementos de audio del HTML
-    eatSound = document.getElementById('eatSound');
-    crashSound = document.getElementById('crashSound');
-    powerUpSound = document.getElementById('powerupSound');
-    levelUpSound = document.getElementById('levelUpSound');
-    gameOverSound = document.getElementById('gameOverSound');
-    
-    // Asegurarse de que los elementos de audio estén listos para reproducirse
-    [eatSound, crashSound, powerUpSound, levelUpSound, gameOverSound].forEach(sound => {
-        if (sound) {
-            // Precarga de sonidos
-            sound.load();
-            // Manejo de errores
-            sound.onerror = function() {
-                console.log(`No se pudo cargar el sonido: ${sound.src}`);
-                // El juego continuará sin sonido
-            };
-        }
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => {
+            console.log(`No se pudo cargar la imagen: ${src}, usando fallback`);
+            // Crear un canvas como fallback
+            const canvas = document.createElement('canvas');
+            canvas.width = 20;
+            canvas.height = 20;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = fallbackColor;
+            ctx.fillRect(0, 0, 20, 20);
+            resolve(canvas);
+        };
+        img.src = src;
     });
-    
-    // Configurar controles del teclado
-    document.addEventListener('keydown', handleKeyPress);
-    
-    // Configurar controles táctiles para dispositivos móviles
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchmove', handleTouchMove);
-    
-    // Pausar/Reanudar con ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && menu.style.display !== 'block') {
-            togglePause();
-        }
-    });
-    
-    // Configurar eventos de botones
-    startButton.addEventListener('click', () => {
-        setupGameMode('classic'); // Modo por defecto
-    });
-    
-    // Configurar botones de modo de juego (asegurar que existan)
-    const classicModeBtn = document.getElementById('classicMode');
-    const mazeModeBtn = document.getElementById('mazeMode');
-    const timeModeBtn = document.getElementById('timeMode');
-    const battleModeBtn = document.getElementById('battleMode');
-    
-    if (classicModeBtn) classicModeBtn.addEventListener('click', () => setupGameMode('classic'));
-    if (mazeModeBtn) mazeModeBtn.addEventListener('click', () => setupGameMode('maze'));
-    if (timeModeBtn) timeModeBtn.addEventListener('click', () => setupGameMode('time'));
-    if (battleModeBtn) battleModeBtn.addEventListener('click', () => setupGameMode('battle'));
-    
-    // Botones de personalización y controles táctiles
-    const toggleControlsBtn = document.getElementById('toggleControls');
-    if (toggleControlsBtn) {
-        toggleControlsBtn.addEventListener('click', () => {
-            const mobileControls = document.querySelector('.mobile-controls');
-            if (mobileControls) {
-                mobileControls.style.display = mobileControls.style.display === 'none' ? 'block' : 'none';
-            }
-        });
-    }
-    
-    // Inicializar controles táctiles
-    const mobileControls = document.querySelector('.mobile-controls');
-    if (mobileControls && isTouchDevice) {
-        mobileControls.style.display = 'block';
-    }
-    
-    // Cargar puntuación máxima desde localStorage
-    highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0');
-    highScoreText.textContent = highScore;
-    
-    // Cargar preferencia de idioma
-    userLanguage = localStorage.getItem(LANGUAGE_KEY) || navigator.language.split('-')[0];
-    if (!translations[userLanguage]) {
-        userLanguage = 'en'; // Idioma por defecto
-    }
-    
-    // Cargar iniciales guardadas
-    playerInitials = localStorage.getItem(INITIALS_KEY) || 'AAA';
-    
-    // Actualizar textos de la interfaz con el idioma elegido
-    updateUITexts();
-    
-    // Inicializar el juego
-    initGame();
-});
-
-// Control de teclado
-function handleKeyPress(e) {
-    if (isPaused) return;
-    
-    // Prevenir el desplazamiento de la página con las flechas
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-        e.preventDefault();
-    }
-    
-    switch (e.key) {
-        case 'ArrowUp':
-            if (direction !== 'down') direction = 'up';
-            break;
-        case 'ArrowDown':
-            if (direction !== 'up') direction = 'down';
-            break;
-        case 'ArrowLeft':
-            if (direction !== 'right') direction = 'left';
-            break;
-        case 'ArrowRight':
-            if (direction !== 'left') direction = 'right';
-            break;
-        case ' ':
-            togglePause();
-            break;
-    }
 }
 
-// Control táctil para dispositivos móviles
-let touchStartX = 0;
-let touchStartY = 0;
-
-function handleTouchStart(e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-}
-
-function handleTouchMove(e) {
-    if (isPaused) return;
+// Función para iniciar el juego
+function startGame() {
+    setupGame();
     
-    e.preventDefault();
-    
-    const touchEndX = e.touches[0].clientX;
-    const touchEndY = e.touches[0].clientY;
-    
-    const diffX = touchStartX - touchEndX;
-    const diffY = touchStartY - touchEndY;
-    
-    // Detectar si el movimiento fue horizontal o vertical
-    if (Math.abs(diffX) > Math.abs(diffY)) {
-        // Movimiento horizontal
-        if (diffX > 0 && direction !== 'right') {
-            direction = 'left';
-        } else if (diffX < 0 && direction !== 'left') {
-            direction = 'right';
-        }
-    } else {
-        // Movimiento vertical
-        if (diffY > 0 && direction !== 'down') {
-            direction = 'up';
-        } else if (diffY < 0 && direction !== 'up') {
-            direction = 'down';
-        }
+    // Iniciar el intervalo para modo contrarreloj
+    if (gameMode === 'time') {
+        if (timeInterval) clearInterval(timeInterval);
+        timeInterval = setInterval(updateTimer, 1000);
     }
     
-    // Actualizar posición de inicio para el próximo movimiento
-    touchStartX = touchEndX;
-    touchStartY = touchEndY;
-}
-
-function togglePause() {
-    isPaused = !isPaused;
-    
-    // Mostrar mensaje de pausa
-    if (isPaused) {
-        const pauseMessage = document.createElement('div');
-        pauseMessage.id = 'pauseMessage';
-        pauseMessage.textContent = translations[userLanguage]['paused'];
-        pauseMessage.classList.add('pause-message');
-        document.body.appendChild(pauseMessage);
-    } else {
-        // Eliminar mensaje de pausa
-        const pauseMessage = document.getElementById('pauseMessage');
-        if (pauseMessage) {
-            pauseMessage.remove();
+    // Configurar intervalo para power-ups
+    if (powerUpInterval) clearInterval(powerUpInterval);
+    powerUpInterval = setInterval(() => {
+        if (Math.random() < 0.3) { // 30% de probabilidad
+            createPowerUp();
         }
-    }
+    }, 10000); // Cada 10 segundos
 }
