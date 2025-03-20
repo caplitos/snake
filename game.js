@@ -1,3 +1,6 @@
+// Importar funciones para detección de país y banderas
+import { getUserCountry, getCountryFlagHTML } from './country.js';
+
 // Código de inicialización - cargar recursos y configurar eventos
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias a elementos UI
@@ -693,7 +696,9 @@ function drawSnake() {
     // Dibujar el cuerpo de la serpiente con efecto de gradiente y bordes redondeados
     for (let i = 0; i < snake.length; i++) {
         // El tamaño puede variar si el powerup 'shrink' está activo
-        const size = (activePowerUp === '
+        const size = (activePowerUp === 'shrink' ? gridSize / 2 : gridSize);
+        const offset = (gridSize - size) / 2;
+        const radius = size / 4;
         
         // Cabeza de la serpiente
         if (i === 0) {
