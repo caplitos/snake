@@ -16,7 +16,7 @@ const ASSETS_TO_CACHE = [
     './icons/android/android-launchericon-48-48.png',
     './audio/crash.mp3',
     './audio/eat.mp3',
-    './audio/gameOver.mp3',
+    './audio/gameover.mp3',
     './audio/levelup.mp3',
     './audio/powerup.mp3'
 ];
